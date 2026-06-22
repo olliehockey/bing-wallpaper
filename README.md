@@ -1,4 +1,4 @@
-# bing-wallpaper-macOS
+# bing-wallpaper
 
 ## Platform installers
 
@@ -47,8 +47,8 @@ Automatically download Bing's daily "image of the day" and set it as your macOS 
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/bing-wallpaper-macOS.git
-cd bing-wallpaper-macOS
+git clone https://github.com/YOUR_USERNAME/bing-wallpaper.git
+cd bing-wallpaper
 chmod +x install.sh uninstall.sh scripts/bing-wallpaper-macos
 ./install.sh
 ```
