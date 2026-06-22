@@ -79,3 +79,17 @@ Reset to the default market:
     bing-wallpaper market reset
 
 Changing market clears the last successful update marker and immediately requests a new updater run.
+
+## Help
+
+Show general help:
+
+    bing-wallpaper --help
+
+Show market help:
+
+    bing-wallpaper market --help
+
+Show image info help:
+
+    bing-wallpaper info --help

@@ -214,12 +214,97 @@ function Get-CurrentInfoFile {
 
 function Show-Usage {
     Write-Host "Usage:"
-    Write-Host "  bing-wallpaper          Run the updater normally"
-    Write-Host "  bing-wallpaper enable   Enable automatic wallpaper updates"
-    Write-Host "  bing-wallpaper disable  Disable automatic wallpaper updates"
-    Write-Host "  bing-wallpaper status   Show whether updates are enabled or disabled"
-    Write-Host "  bing-wallpaper market   Show or change the Bing market"
-    Write-Host "  bing-wallpaper info     Show current Bing image information"
+    Write-Host "  bing-wallpaper [command]"
+    Write-Host ""
+    Write-Host "Commands:"
+    Write-Host "  bing-wallpaper"
+    Write-Host "      Run the updater normally."
+    Write-Host ""
+    Write-Host "  bing-wallpaper status"
+    Write-Host "      Show whether updates are enabled, the current market, the latest recorded"
+    Write-Host "      Bing image date, the current wallpaper path, and the info file path."
+    Write-Host ""
+    Write-Host "  bing-wallpaper info"
+    Write-Host "      Print the current Bing image information note."
+    Write-Host ""
+    Write-Host "  bing-wallpaper market"
+    Write-Host "      Show the current Bing market."
+    Write-Host ""
+    Write-Host "  bing-wallpaper market MARKET"
+    Write-Host "      Change the Bing market, clear the success marker, and request an"
+    Write-Host "      immediate updater run."
+    Write-Host ""
+    Write-Host "  bing-wallpaper market reset"
+    Write-Host "      Reset to the default market."
+    Write-Host ""
+    Write-Host "  bing-wallpaper disable"
+    Write-Host "      Pause automatic wallpaper updates without uninstalling."
+    Write-Host ""
+    Write-Host "  bing-wallpaper enable"
+    Write-Host "      Re-enable updates and request an immediate updater run."
+    Write-Host ""
+    Write-Host "Examples:"
+    Write-Host "  bing-wallpaper status"
+    Write-Host "  bing-wallpaper info"
+    Write-Host "  bing-wallpaper market en-GB"
+    Write-Host "  bing-wallpaper market en-US"
+    Write-Host "  bing-wallpaper market fr-FR"
+    Write-Host "  bing-wallpaper market de-DE"
+    Write-Host "  bing-wallpaper disable"
+    Write-Host "  bing-wallpaper enable"
+    Write-Host ""
+    Write-Host "More help:"
+    Write-Host "  bing-wallpaper market --help"
+    Write-Host "  bing-wallpaper info --help"
+}
+
+
+function Show-MarketUsage {
+    Write-Host "Usage:"
+    Write-Host "  bing-wallpaper market"
+    Write-Host "  bing-wallpaper market MARKET"
+    Write-Host "  bing-wallpaper market reset"
+    Write-Host ""
+    Write-Host "Show or change the Bing market."
+    Write-Host ""
+    Write-Host "Examples:"
+    Write-Host "  bing-wallpaper market"
+    Write-Host "  bing-wallpaper market en-GB"
+    Write-Host "  bing-wallpaper market en-US"
+    Write-Host "  bing-wallpaper market fr-FR"
+    Write-Host "  bing-wallpaper market de-DE"
+    Write-Host "  bing-wallpaper market reset"
+    Write-Host ""
+    Write-Host "Market format:"
+    Write-Host "  language-REGION"
+    Write-Host ""
+    Write-Host "Examples:"
+    Write-Host "  en-GB   United Kingdom English"
+    Write-Host "  en-US   United States English"
+    Write-Host "  fr-FR   France French"
+    Write-Host "  de-DE   Germany German"
+    Write-Host "  ja-JP   Japan Japanese"
+    Write-Host ""
+    Write-Host "Changing market clears the last successful update marker and requests an"
+    Write-Host "immediate updater run."
+}
+
+function Show-InfoUsage {
+    Write-Host "Usage:"
+    Write-Host "  bing-wallpaper info"
+    Write-Host ""
+    Write-Host "Print the current Bing image information note."
+    Write-Host ""
+    Write-Host "The note is stored beside the downloaded wallpaper using this pattern:"
+    Write-Host ""
+    Write-Host "  bing-YYYYMMDD-info.txt"
+    Write-Host ""
+    Write-Host "Example:"
+    Write-Host ""
+    Write-Host "  %USERPROFILE%\Pictures\Bing Wallpaper\bing-20260623-info.txt"
+    Write-Host ""
+    Write-Host "The note contains the date, market, image file path, title, copyright/credit,"
+    Write-Host "and source link from Bing metadata."
 }
 
 $Command = $Command.ToLowerInvariant()
@@ -255,6 +340,11 @@ switch ($Command) {
     }
 
     "market" {
+        if (@("-h", "-help", "--help", "help") -contains $Argument) {
+            Show-MarketUsage
+            exit 0
+        }
+
         if ([string]::IsNullOrWhiteSpace($Argument)) {
             Write-Host "Current market: $Market"
             Write-Host ""
@@ -303,6 +393,11 @@ switch ($Command) {
     }
 
     "info" {
+        if (@("-h", "-help", "--help", "help") -contains $Argument) {
+            Show-InfoUsage
+            exit 0
+        }
+
         $InfoFile = Get-CurrentInfoFile
 
         if (-not $InfoFile -and (Test-Path -LiteralPath $JsonFile)) {

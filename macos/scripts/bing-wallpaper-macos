@@ -161,12 +161,101 @@ get_current_info_file() {
 print_usage() {
   cat <<USAGE
 Usage:
-  bing-wallpaper          Run the updater normally
-  bing-wallpaper enable   Enable automatic wallpaper updates
-  bing-wallpaper disable  Disable automatic wallpaper updates
-  bing-wallpaper status   Show whether updates are enabled or disabled
-  bing-wallpaper market   Show or change the Bing market
-  bing-wallpaper info     Show current Bing image information
+  bing-wallpaper [command]
+
+Commands:
+  bing-wallpaper
+      Run the updater normally.
+
+  bing-wallpaper status
+      Show whether updates are enabled, the current market, the latest recorded
+      Bing image date, the current wallpaper path, and the info file path.
+
+  bing-wallpaper info
+      Print the current Bing image information note.
+
+  bing-wallpaper market
+      Show the current Bing market.
+
+  bing-wallpaper market MARKET
+      Change the Bing market, clear the success marker, and request an
+      immediate updater run.
+
+  bing-wallpaper market reset
+      Reset to the default market.
+
+  bing-wallpaper disable
+      Pause automatic wallpaper updates without uninstalling.
+
+  bing-wallpaper enable
+      Re-enable updates and request an immediate updater run.
+
+Examples:
+  bing-wallpaper status
+  bing-wallpaper info
+  bing-wallpaper market en-GB
+  bing-wallpaper market en-US
+  bing-wallpaper market fr-FR
+  bing-wallpaper market de-DE
+  bing-wallpaper disable
+  bing-wallpaper enable
+
+More help:
+  bing-wallpaper market --help
+  bing-wallpaper info --help
+USAGE
+}
+
+
+print_market_usage() {
+  cat <<USAGE
+Usage:
+  bing-wallpaper market
+  bing-wallpaper market MARKET
+  bing-wallpaper market reset
+
+Show or change the Bing market.
+
+Examples:
+  bing-wallpaper market
+  bing-wallpaper market en-GB
+  bing-wallpaper market en-US
+  bing-wallpaper market fr-FR
+  bing-wallpaper market de-DE
+  bing-wallpaper market reset
+
+Market format:
+  language-REGION
+
+Examples:
+  en-GB   United Kingdom English
+  en-US   United States English
+  fr-FR   France French
+  de-DE   Germany German
+  ja-JP   Japan Japanese
+
+Changing market clears the last successful update marker and requests an
+immediate updater run.
+USAGE
+}
+
+print_info_usage() {
+  cat <<USAGE
+Usage:
+  bing-wallpaper info
+
+Print the current Bing image information note.
+
+The note is stored beside the downloaded wallpaper using this pattern:
+
+  bing-YYYYMMDD-info.txt
+
+Example:
+
+  ~/Pictures/Bing Wallpaper/bing-20260623-info.txt
+
+The note contains the date, market, image file path, title, copyright/credit,
+and source link from Bing metadata.
 USAGE
 }
 
@@ -196,6 +285,11 @@ case "${1:-run}" in
     ;;
 
   market)
+    if [[ "${2:-}" == "-h" || "${2:-}" == "-help" || "${2:-}" == "--help" || "${2:-}" == "help" ]]; then
+      print_market_usage
+      exit 0
+    fi
+
     if [[ $# -lt 2 ]]; then
       echo "Current market: $MARKET"
       echo
@@ -239,6 +333,11 @@ case "${1:-run}" in
     ;;
 
   info)
+    if [[ "${2:-}" == "-h" || "${2:-}" == "-help" || "${2:-}" == "--help" || "${2:-}" == "help" ]]; then
+      print_info_usage
+      exit 0
+    fi
+
     INFO_FILE="$(get_current_info_file)"
 
     if [[ -z "$INFO_FILE" && -f "$JSON_FILE" ]]; then
