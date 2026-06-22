@@ -254,8 +254,11 @@ function Show-Usage {
     Write-Host "  bing-wallpaper enable"
     Write-Host ""
     Write-Host "More help:"
-    Write-Host "  bing-wallpaper market --help"
+    Write-Host "  bing-wallpaper status --help"
     Write-Host "  bing-wallpaper info --help"
+    Write-Host "  bing-wallpaper market --help"
+    Write-Host "  bing-wallpaper enable --help"
+    Write-Host "  bing-wallpaper disable --help"
 }
 
 
@@ -307,10 +310,62 @@ function Show-InfoUsage {
     Write-Host "and source link from Bing metadata."
 }
 
+
+function Show-StatusUsage {
+    Write-Host "Usage:"
+    Write-Host "  bing-wallpaper status"
+    Write-Host ""
+    Write-Host "Show the current updater state."
+    Write-Host ""
+    Write-Host "It reports:"
+    Write-Host "  status enabled/disabled"
+    Write-Host "  current market"
+    Write-Host "  last successful update date"
+    Write-Host "  latest recorded Bing image date"
+    Write-Host "  current wallpaper path"
+    Write-Host "  image info file path"
+}
+
+function Show-EnableUsage {
+    Write-Host "Usage:"
+    Write-Host "  bing-wallpaper enable"
+    Write-Host ""
+    Write-Host "Re-enable automatic wallpaper updates."
+    Write-Host ""
+    Write-Host "This removes the disabled marker and triggers an immediate scheduler run."
+    Write-Host ""
+    Write-Host "On Windows, this starts the Scheduled Task."
+    Write-Host ""
+    Write-Host "Use this after:"
+    Write-Host ""
+    Write-Host "  bing-wallpaper disable"
+}
+
+function Show-DisableUsage {
+    Write-Host "Usage:"
+    Write-Host "  bing-wallpaper disable"
+    Write-Host ""
+    Write-Host "Pause automatic wallpaper updates without uninstalling."
+    Write-Host ""
+    Write-Host "When disabled:"
+    Write-Host "  scheduled runs exit immediately"
+    Write-Host "  the current wallpaper is left unchanged"
+    Write-Host "  the Scheduled Task remains installed"
+    Write-Host ""
+    Write-Host "Re-enable with:"
+    Write-Host ""
+    Write-Host "  bing-wallpaper enable"
+}
+
 $Command = $Command.ToLowerInvariant()
 
 switch ($Command) {
     "enable" {
+        if (@("-h", "-help", "--help", "help") -contains $Argument) {
+            Show-EnableUsage
+            exit 0
+        }
+
         Remove-Item -LiteralPath $DisabledFile -Force -ErrorAction SilentlyContinue
         Write-Host "Bing wallpaper updates enabled."
         Write-Host "Triggering a Scheduled Task run now."
@@ -331,6 +386,11 @@ switch ($Command) {
     }
 
     "disable" {
+        if (@("-h", "-help", "--help", "help") -contains $Argument) {
+            Show-DisableUsage
+            exit 0
+        }
+
         (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") | Set-Content -LiteralPath $DisabledFile -Encoding UTF8
         Write-Host "Bing wallpaper updates disabled."
         Write-Host "Current wallpaper has not been changed."
@@ -432,6 +492,11 @@ switch ($Command) {
     }
 
     "status" {
+        if (@("-h", "-help", "--help", "help") -contains $Argument) {
+            Show-StatusUsage
+            exit 0
+        }
+
         if (Test-Path -LiteralPath $DisabledFile) {
             Write-Host "Status: disabled"
             Write-Host "Disabled marker: $DisabledFile"

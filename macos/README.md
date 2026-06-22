@@ -86,6 +86,10 @@ Show general help:
 
     bing-wallpaper --help
 
+Show status help:
+
+    bing-wallpaper status --help
+
 Show market help:
 
     bing-wallpaper market --help
@@ -93,3 +97,8 @@ Show market help:
 Show image info help:
 
     bing-wallpaper info --help
+
+Show enable/disable help:
+
+    bing-wallpaper enable --help
+    bing-wallpaper disable --help

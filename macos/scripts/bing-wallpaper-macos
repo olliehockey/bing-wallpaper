@@ -201,8 +201,11 @@ Examples:
   bing-wallpaper enable
 
 More help:
-  bing-wallpaper market --help
+  bing-wallpaper status --help
   bing-wallpaper info --help
+  bing-wallpaper market --help
+  bing-wallpaper enable --help
+  bing-wallpaper disable --help
 USAGE
 }
 
@@ -259,8 +262,66 @@ and source link from Bing metadata.
 USAGE
 }
 
+
+print_status_usage() {
+  cat <<USAGE
+Usage:
+  bing-wallpaper status
+
+Show the current updater state.
+
+It reports:
+  status enabled/disabled
+  current market
+  last successful update date
+  latest recorded Bing image date
+  current wallpaper path
+  image info file path
+USAGE
+}
+
+print_enable_usage() {
+  cat <<USAGE
+Usage:
+  bing-wallpaper enable
+
+Re-enable automatic wallpaper updates.
+
+This removes the disabled marker and requests an immediate scheduler run.
+
+On macOS, this requests a LaunchAgent kickstart.
+
+Use this after:
+
+  bing-wallpaper disable
+USAGE
+}
+
+print_disable_usage() {
+  cat <<USAGE
+Usage:
+  bing-wallpaper disable
+
+Pause automatic wallpaper updates without uninstalling.
+
+When disabled:
+  scheduled runs exit immediately
+  the current wallpaper is left unchanged
+  the LaunchAgent remains installed
+
+Re-enable with:
+
+  bing-wallpaper enable
+USAGE
+}
+
 case "${1:-run}" in
   enable)
+    if [[ "${2:-}" == "-h" || "${2:-}" == "-help" || "${2:-}" == "--help" || "${2:-}" == "help" ]]; then
+      print_enable_usage
+      exit 0
+    fi
+
     rm -f "$DISABLED_FILE"
     echo "Bing wallpaper updates enabled."
     echo "Triggering a launchd run now."
@@ -276,6 +337,11 @@ case "${1:-run}" in
     ;;
 
   disable)
+    if [[ "${2:-}" == "-h" || "${2:-}" == "-help" || "${2:-}" == "--help" || "${2:-}" == "help" ]]; then
+      print_disable_usage
+      exit 0
+    fi
+
     /bin/date -u +"%Y-%m-%dT%H:%M:%SZ" > "$DISABLED_FILE"
     echo "Bing wallpaper updates disabled."
     echo "Current wallpaper has not been changed."
@@ -366,6 +432,11 @@ case "${1:-run}" in
     ;;
 
   status)
+    if [[ "${2:-}" == "-h" || "${2:-}" == "-help" || "${2:-}" == "--help" || "${2:-}" == "help" ]]; then
+      print_status_usage
+      exit 0
+    fi
+
     if [[ -f "$DISABLED_FILE" ]]; then
       echo "Status: disabled"
       echo "Disabled marker: $DISABLED_FILE"
