@@ -6,7 +6,7 @@ The Windows version uses:
 
 - PowerShell for the updater
 - Windows Task Scheduler for automatic runs
-- the current user's Pictures folder for downloaded wallpapers
+- the user's Pictures folder for downloaded wallpapers
 - a small `bing-wallpaper.cmd` launcher for the short command
 
 ## Install
@@ -24,8 +24,6 @@ It also creates a scheduled task named:
 
     Bing Wallpaper
 
-The task runs at logon and then repeatedly throughout the day.
-
 ## Commands
 
 After installing, open a new terminal if needed, then run:
@@ -37,25 +35,23 @@ After installing, open a new terminal if needed, then run:
 
 ## Behaviour
 
-When enabled, the Windows version behaves like the macOS version.
+When enabled, the Windows version keeps Bing as the managed wallpaper.
 
-It keeps trying until today's Bing wallpaper has been downloaded and set successfully.
+If today's image has not been set successfully, it keeps trying.
 
-After success, later scheduled runs check whether the expected image still exists and whether it is still the current desktop wallpaper.
+If the wallpaper image is deleted, it downloads it again.
 
-If the image file has been deleted, it downloads it again.
+If the desktop wallpaper is changed, it restores the Bing wallpaper.
 
-If the image exists but the desktop wallpaper has been changed, it restores the Bing wallpaper without re-downloading it.
-
-If updates are disabled using `bing-wallpaper disable`, the script exits immediately and leaves the current wallpaper unchanged.
+If updates are disabled, scheduled runs exit immediately and leave the wallpaper unchanged.
 
 ## Uninstall
 
-From the repository root, run:
+From the repository root:
 
     cd windows
     .\uninstall.ps1
 
 The uninstaller removes the scheduled task and installed command files.
 
-Downloaded wallpaper images are left in your Pictures folder.
+Downloaded wallpaper images are left in the user's Pictures folder.

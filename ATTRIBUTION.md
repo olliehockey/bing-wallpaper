@@ -1,19 +1,17 @@
 # Attribution
 
-This project was created as a small macOS adaptation of the general idea behind the GNOME “Bing Wallpaper” extension: automatically using Bing’s daily image as the desktop wallpaper.
+`bing-wallpaper` is inspired by the general idea of daily Bing wallpaper tools, including the GNOME Bing Wallpaper extension.
 
-The original GNOME extension that inspired this project is:
+This project is not a port of the GNOME extension and does not reuse its codebase.
 
-- Bing Wallpaper / Bing Wallpaper Changer for GNOME
-- Repository: https://github.com/neffo/bing-wallpaper-gnome-extension
+The macOS and Windows implementations in this repository are separate platform-specific implementations built around each operating system's own scheduling and wallpaper mechanisms.
 
-This macOS project is not a direct port of that GNOME extension. It does not reuse the GNOME Shell extension codebase. Instead, it implements the same broad user-facing idea using macOS-specific tools:
+## Bing images
 
-- `launchd` for background scheduling
-- a zsh script for downloading and state tracking
-- Bing's public wallpaper metadata endpoint
-- `desktoppr` and AppleScript/System Events for setting the wallpaper
+Images are downloaded from Bing's publicly available image metadata and image URLs.
 
-This project is unofficial and is not affiliated with Microsoft, Bing, GNOME, or the maintainers of the GNOME extension.
+Bing images are subject to their own copyright and usage terms. They should be used as wallpapers only.
 
-Bing wallpaper images remain the property of their respective copyright holders and should only be used as wallpapers.
+## Disclaimer
+
+This project is unofficial and is not affiliated with Microsoft, Bing, GNOME, Apple, or Microsoft Windows.

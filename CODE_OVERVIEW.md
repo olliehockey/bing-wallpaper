@@ -1,143 +1,159 @@
-# Code Overview
+# Code overview
 
-This project is intentionally small. The main behaviour lives in:
+This document describes how `bing-wallpaper` is organised and how the updater works.
 
-- `scripts/bing-wallpaper-macos`
-- `LaunchAgents/com.bing-wallpaper-macos.agent.plist.template`
-- `install.sh`
-- `uninstall.sh`
-
-## What the script does
-
-The script:
-
-1. Creates `~/Pictures/Bing Wallpaper` if it does not already exist.
-2. Checks `.last-success-date` to see whether today's wallpaper has already been set successfully.
-3. Checks `latest.json` to work out which local Bing image should exist.
-4. If today is already marked successful and the image still exists, it exits without doing unnecessary work.
-5. If the image is missing, or today has not succeeded yet, it calls Bing's wallpaper metadata endpoint.
-6. It downloads the UHD image when available.
-7. It verifies the downloaded file is a valid image using `sips`.
-8. It sets the macOS wallpaper.
-9. It only writes `.last-success-date` after the wallpaper has been confirmed as set.
-10. It deletes older downloaded Bing images, keeping only the current one.
-
-## Why it retries
-
-The LaunchAgent runs the script every 10 minutes. The script is safe to run repeatedly because it normally exits early after a successful update.
-
-If Wi-Fi is unavailable, Bing is unreachable, the download fails, or macOS does not confirm the wallpaper was set, the script exits without marking the day successful. That means launchd will try again later.
-
-## Why `.last-success-date` exists
-
-The file `.last-success-date` records the last date on which the wallpaper was successfully downloaded and set.
-
-This prevents repeated downloads throughout the day while still allowing recovery if the local image is deleted.
-
-## Why `latest.json` exists
-
-`latest.json` stores Bing's most recent wallpaper metadata. The script uses it to know which local image file should exist for the current Bing image.
-
-This is how the script can notice that today was marked successful but the local wallpaper image has been deleted.
-
-## Why `desktoppr` is used
-
-macOS wallpaper setting can be unreliable through AppleScript alone, especially when other wallpaper tools have previously modified desktop state.
-
-The script tries `desktoppr` first because it is a direct command-line wallpaper setter. If `desktoppr` does not verify the expected wallpaper path, the script falls back to AppleScript/System Events.
-
-## Why old images are deleted
-
-The project is designed to keep the current Bing wallpaper, not build a long-term wallpaper archive.
-
-After a successful update, old `bing-*.jpg` files are removed from the wallpaper folder.
-
-## Enable and disable behaviour
-
-The updater can be paused without uninstalling the LaunchAgent.
-
-Running:
-
-    bing-wallpaper-macos disable
-
-creates a `.disabled` marker file in `~/Pictures/Bing Wallpaper/`.
-
-When that marker exists, scheduled launchd runs exit immediately and leave the current wallpaper unchanged.
-
-Running:
-
-    bing-wallpaper-macos enable
-
-removes the marker file and allows the next scheduled run to update the wallpaper again.
-
-Running:
-
-    bing-wallpaper-macos status
-
-shows whether updates are currently enabled or disabled.
-
-## Short command alias
-
-The installer creates a short convenience command:
-
-    bing-wallpaper
-
-This is a symlink to the installed script:
-
-    bing-wallpaper-macos
-
-Both commands run the same updater and support the same arguments, including `enable`, `disable`, and `status`.
-
-## Managed wallpaper behaviour
-
-When enabled, the script acts as a small wallpaper manager rather than just a once-per-day downloader.
-
-After a successful daily update, later scheduled runs still check that the expected Bing image exists and is still the current desktop wallpaper.
-
-If the image file has been deleted, the script downloads it again.
-
-If the image exists but the desktop wallpaper has been changed, the script restores the Bing wallpaper without re-downloading it.
-
-If updates are disabled using `bing-wallpaper disable`, the script exits immediately and leaves the current desktop wallpaper unchanged.
-
-## Platform layout
-
-The repository is split by platform.
-
-macOS-specific files live in:
+## Repository layout
 
     macos/
-
-Windows-specific files will live in:
-
-    windows/
-
-The root `install.sh` and `uninstall.sh` files are guide scripts only. They do not install anything directly. The user must explicitly choose the platform installer.
-
-## Windows implementation
-
-The Windows implementation lives in:
+      macOS installer, uninstaller, LaunchAgent template, and updater script
 
     windows/
+      Windows installer, uninstaller, command launcher, and updater script
 
-The main updater is:
+    README.md
+      User-facing project documentation
 
-    windows/scripts/bing-wallpaper-windows.ps1
+    ATTRIBUTION.md
+      Attribution and disclaimer notes
 
-The installer is:
+## Platform selection
+
+Installation is explicit by platform.
+
+The root installer scripts are guide scripts only. They detect or describe the platform and point the user to the correct platform folder, but they do not install anything directly.
+
+macOS installation is done from:
+
+    macos/install.sh
+
+Windows installation is done from:
 
     windows/install.ps1
 
-The Windows version uses PowerShell, Windows Task Scheduler, the user's Pictures folder, and a small `bing-wallpaper.cmd` launcher.
+## Shared behaviour
 
-It follows the same managed wallpaper behaviour as the macOS version: retry until successful, re-download if the image is deleted, and restore the Bing wallpaper if the desktop wallpaper is changed while updates are enabled.
+Both platform implementations follow the same overall workflow.
 
-## Enable command behaviour
+On each normal run:
 
-The `enable` command removes the disabled marker and then immediately triggers a scheduler run.
+1. Check whether updates are disabled.
+2. If disabled, exit without changing the wallpaper.
+3. Check whether today's image was already successfully set.
+4. If today's image is already set as the current wallpaper, exit.
+5. If today's image exists but the desktop wallpaper is different, restore it.
+6. If today's image is missing, download it again.
+7. If today's image has not succeeded yet, download and set it.
+8. Record success only after the wallpaper setter verifies the change.
 
-On macOS, this is done with `launchctl kickstart` for the LaunchAgent.
+## Managed wallpaper behaviour
 
-On Windows, this is done with `Start-ScheduledTask` for the `Bing Wallpaper` Scheduled Task.
+When enabled, the updater treats Bing as the managed wallpaper.
 
-If the scheduler entry is not loaded or registered, the updater falls back to running directly.
+That means the updater does not merely download once per day. It also checks that the expected Bing image still exists and is still the active desktop wallpaper.
+
+If the user changes the wallpaper while updates are enabled, the next updater run restores the Bing wallpaper.
+
+If the user deletes the local image file, the next updater run downloads it again.
+
+To temporarily use another wallpaper without automatic restoration, run:
+
+    bing-wallpaper disable
+
+## macOS implementation
+
+The macOS updater is:
+
+    macos/scripts/bing-wallpaper-macos
+
+It is written as a zsh script.
+
+The macOS installer copies it to:
+
+    ~/.local/bin/bing-wallpaper-macos
+
+and creates a shorter symlink:
+
+    ~/.local/bin/bing-wallpaper
+
+Automatic runs are handled by launchd through:
+
+    ~/Library/LaunchAgents/com.bing-wallpaper-macos.agent.plist
+
+The LaunchAgent template lives at:
+
+    macos/LaunchAgents/com.bing-wallpaper-macos.agent.plist.template
+
+The script uses Bing's image metadata endpoint, downloads the image, validates it with `sips`, and sets the wallpaper using `desktoppr` when available, with an AppleScript fallback.
+
+## Windows implementation
+
+The Windows updater is:
+
+    windows/scripts/bing-wallpaper-windows.ps1
+
+It is written in PowerShell.
+
+The Windows installer copies it to:
+
+    %LOCALAPPDATA%\Programs\bing-wallpaper
+
+It also creates a command launcher:
+
+    bing-wallpaper.cmd
+
+Automatic runs are handled by Windows Task Scheduler with a task called:
+
+    Bing Wallpaper
+
+The script uses Bing's image metadata endpoint, downloads the image, validates it with .NET image handling, and sets the wallpaper using the Windows registry plus `SystemParametersInfo`.
+
+## Enable and disable behaviour
+
+The updater can be paused without uninstalling the scheduler.
+
+Disable:
+
+    bing-wallpaper disable
+
+This creates a `.disabled` marker file in the wallpaper folder.
+
+Enable:
+
+    bing-wallpaper enable
+
+This removes the marker file and immediately requests a scheduler run.
+
+On macOS, enable requests a LaunchAgent kickstart.
+
+On Windows, enable starts the Scheduled Task.
+
+If the scheduler entry is not available, the updater falls back to running directly.
+
+## Local state
+
+The updater stores state in the user's wallpaper folder.
+
+On macOS:
+
+    ~/Pictures/Bing Wallpaper
+
+On Windows:
+
+    %USERPROFILE%\Pictures\Bing Wallpaper
+
+Important files:
+
+    latest.json
+      latest Bing metadata response
+
+    .last-success-date
+      date of the last confirmed successful wallpaper update
+
+    .disabled
+      marker file used to pause updates
+
+## Cleanup behaviour
+
+The project is designed to keep the current Bing wallpaper, not build a long-term archive.
+
+After a successful update, old `bing-*.jpg` files are removed from the wallpaper folder.
