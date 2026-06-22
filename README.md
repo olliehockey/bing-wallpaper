@@ -123,3 +123,31 @@ rm "$HOME/Pictures/Bing Wallpaper/.last-success-date"
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Attribution
+
+This project is a macOS adaptation of the general idea behind the GNOME “Bing Wallpaper” extension: automatically using Bing’s daily image as the desktop wallpaper.
+
+The original GNOME extension that inspired this project is [neffo/bing-wallpaper-gnome-extension](https://github.com/neffo/bing-wallpaper-gnome-extension).
+
+This repository is not a direct port and does not reuse the GNOME Shell extension codebase. It implements the idea separately for macOS using `launchd`, zsh, Bing's wallpaper metadata endpoint, and macOS wallpaper-setting tools.
+
+See [ATTRIBUTION.md](ATTRIBUTION.md) for more detail.
+
+## AI assistance
+
+This project was developed with assistance from ChatGPT. AI assistance was used to help design the macOS workflow, write and debug the shell script, improve retry behaviour, and draft documentation.
+
+The final code was tested locally by the repository owner. See [AI_ASSISTANCE.md](AI_ASSISTANCE.md) for more detail.
+
+## Code overview
+
+The project is intentionally small. The main script downloads Bing's daily wallpaper, verifies it, sets it as the macOS desktop wallpaper, records successful updates, and cleans up old images.
+
+For a plain-English explanation of how the code works, see [CODE_OVERVIEW.md](CODE_OVERVIEW.md).
+
+## Disclaimer
+
+This project is unofficial and is not affiliated with Microsoft, Bing, GNOME, or the maintainers of the GNOME Bing Wallpaper extension.
+
+Bing wallpaper images remain the property of their respective copyright holders and should only be used as wallpapers.

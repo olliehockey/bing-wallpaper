@@ -1,4 +1,16 @@
 #!/bin/zsh
+#
+# bing-wallpaper-macos
+#
+# Downloads Bing's daily wallpaper and sets it as the macOS desktop wallpaper.
+#
+# This is a macOS-specific adaptation of the general idea behind GNOME's
+# Bing Wallpaper extension. It is not a direct port of that extension and does
+# not reuse its codebase.
+#
+# The script is designed to be run repeatedly by launchd. It records success
+# only after the wallpaper has actually been set, so failures can be retried.
+#
 set -euo pipefail
 
 MARKET="${BING_MARKET:-en-GB}"
