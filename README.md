@@ -116,3 +116,19 @@ Bing images are subject to their own copyright and usage terms. They should be u
 ## License
 
 MIT — see `LICENSE`.
+
+## Image information note
+
+The updater writes a human-readable note for the current Bing image beside the downloaded wallpaper.
+
+The note uses this naming pattern:
+
+    bing-YYYYMMDD-info.txt
+
+For example:
+
+    bing-20260622-info.txt
+
+Read it with:
+
+    bing-wallpaper info

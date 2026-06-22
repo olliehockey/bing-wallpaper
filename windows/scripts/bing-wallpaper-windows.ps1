@@ -115,12 +115,96 @@ function Test-ValidImage {
     }
 }
 
+
+function Write-InfoFile {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$JsonPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$EndDate,
+
+        [string]$ImagePath
+    )
+
+    if (-not (Test-Path -LiteralPath $JsonPath)) {
+        return $null
+    }
+
+    if ([string]::IsNullOrWhiteSpace($EndDate)) {
+        return $null
+    }
+
+    try {
+        $data = Get-Content -LiteralPath $JsonPath -Raw | ConvertFrom-Json
+        $image = $data.images[0]
+
+        $title = if ($image.title) { $image.title } else { "Unavailable" }
+        $copyright = if ($image.copyright) { $image.copyright } else { "Unavailable" }
+        $copyrightLink = if ($image.copyrightlink) { $image.copyrightlink } else { "Unavailable" }
+
+        $InfoFile = Join-Path $WallpaperDir "bing-$EndDate-info.txt"
+
+        $content = @"
+Bing wallpaper of the day
+
+Date: $EndDate
+Market: $Market
+Image file: $ImagePath
+
+Title:
+$title
+
+Copyright:
+$copyright
+
+Source:
+$copyrightLink
+"@
+
+        Set-Content -LiteralPath $InfoFile -Value $content -Encoding UTF8
+        return $InfoFile
+    }
+    catch {
+        return $null
+    }
+}
+
+function Get-CurrentInfoFile {
+    if (Test-Path -LiteralPath $JsonFile) {
+        try {
+            $data = Get-Content -LiteralPath $JsonFile -Raw | ConvertFrom-Json
+            $endDate = $data.images[0].enddate
+
+            if ($endDate) {
+                $candidate = Join-Path $WallpaperDir "bing-$endDate-info.txt"
+                if (Test-Path -LiteralPath $candidate) {
+                    return $candidate
+                }
+            }
+        }
+        catch {
+        }
+    }
+
+    $latest = Get-ChildItem -LiteralPath $WallpaperDir -Filter "bing-*-info.txt" -ErrorAction SilentlyContinue |
+        Sort-Object Name |
+        Select-Object -Last 1
+
+    if ($latest) {
+        return $latest.FullName
+    }
+
+    return ""
+}
+
 function Show-Usage {
     Write-Host "Usage:"
     Write-Host "  bing-wallpaper          Run the updater normally"
     Write-Host "  bing-wallpaper enable   Enable automatic wallpaper updates"
     Write-Host "  bing-wallpaper disable  Disable automatic wallpaper updates"
     Write-Host "  bing-wallpaper status   Show whether updates are enabled or disabled"
+    Write-Host "  bing-wallpaper info     Show current Bing image information"
 }
 
 $Command = $Command.ToLowerInvariant()
@@ -153,6 +237,40 @@ switch ($Command) {
         Write-Host "Run this to re-enable:"
         Write-Host "  bing-wallpaper enable"
         exit 0
+    }
+
+    "info" {
+        $InfoFile = Get-CurrentInfoFile
+
+        if (-not $InfoFile -and (Test-Path -LiteralPath $JsonFile)) {
+            try {
+                $data = Get-Content -LiteralPath $JsonFile -Raw | ConvertFrom-Json
+                $infoEndDate = $data.images[0].enddate
+                $infoImage = ""
+
+                $uhdCandidate = Join-Path $WallpaperDir "bing-$infoEndDate-UHD.jpg"
+                $standardCandidate = Join-Path $WallpaperDir "bing-$infoEndDate.jpg"
+
+                if (Test-Path -LiteralPath $uhdCandidate) {
+                    $infoImage = [System.IO.Path]::GetFullPath($uhdCandidate)
+                }
+                elseif (Test-Path -LiteralPath $standardCandidate) {
+                    $infoImage = [System.IO.Path]::GetFullPath($standardCandidate)
+                }
+
+                $InfoFile = Write-InfoFile -JsonPath $JsonFile -EndDate $infoEndDate -ImagePath $infoImage
+            }
+            catch {
+            }
+        }
+
+        if ($InfoFile -and (Test-Path -LiteralPath $InfoFile)) {
+            Get-Content -LiteralPath $InfoFile
+            exit 0
+        }
+
+        Write-Host "No Bing wallpaper info file found yet."
+        exit 1
     }
 
     "status" {
@@ -191,6 +309,11 @@ switch ($Command) {
         $current = Get-CurrentWallpaper
         if ($current) {
             Write-Host "Current wallpaper: $current"
+        }
+
+        $InfoFile = Get-CurrentInfoFile
+        if ($InfoFile) {
+            Write-Host "Info file: $InfoFile"
         }
 
         exit 0
@@ -271,6 +394,7 @@ if (($LastSuccess -eq $Today) -and $ExpectedImage) {
     $CurrentWallpaper = Get-CurrentWallpaper
 
     if (Test-SamePath $CurrentWallpaper $ExpectedImage) {
+        Write-InfoFile -JsonPath $JsonFile -EndDate $expectedEndDate -ImagePath $ExpectedImage | Out-Null
         Write-Host "Wallpaper already successfully updated today ($Today). Local image exists and is currently set: $ExpectedImage. Leaving as-is."
         exit 0
     }
@@ -285,6 +409,7 @@ if (($LastSuccess -eq $Today) -and $ExpectedImage) {
     }
 
     $Today | Set-Content -LiteralPath $SuccessFile -Encoding UTF8
+    Write-InfoFile -JsonPath $JsonFile -EndDate $expectedEndDate -ImagePath $ExpectedImage | Out-Null
     Write-Host "Restored wallpaper to $ExpectedImage"
     exit 0
 }
@@ -341,6 +466,7 @@ try {
     }
 
     $Today | Set-Content -LiteralPath $SuccessFile -Encoding UTF8
+    $InfoFile = Write-InfoFile -JsonPath $JsonFile -EndDate $EndDate -ImagePath $ImageFile
 
     Get-ChildItem -LiteralPath $WallpaperDir -Filter "bing-*.jpg" -ErrorAction SilentlyContinue |
         Where-Object { -not (Test-SamePath $_.FullName $ImageFile) } |

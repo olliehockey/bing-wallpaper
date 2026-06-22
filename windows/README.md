@@ -29,6 +29,7 @@ It also creates a scheduled task named:
 After installing, open a new terminal if needed, then run:
 
     bing-wallpaper status
+    bing-wallpaper info
     bing-wallpaper disable
     bing-wallpaper enable
     bing-wallpaper
@@ -55,3 +56,19 @@ From the repository root:
 The uninstaller removes the scheduled task and installed command files.
 
 Downloaded wallpaper images are left in the user's Pictures folder.
+
+## Image information note
+
+The updater writes a human-readable note for the current Bing image beside the downloaded wallpaper.
+
+The note uses this naming pattern:
+
+    bing-YYYYMMDD-info.txt
+
+For example:
+
+    bing-20260622-info.txt
+
+Read it with:
+
+    bing-wallpaper info

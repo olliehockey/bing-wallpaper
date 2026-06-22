@@ -157,3 +157,19 @@ Important files:
 The project is designed to keep the current Bing wallpaper, not build a long-term archive.
 
 After a successful update, old `bing-*.jpg` files are removed from the wallpaper folder.
+
+## Image information note
+
+The updater writes a human-readable note for the current Bing image beside the downloaded wallpaper.
+
+The note uses this naming pattern:
+
+    bing-YYYYMMDD-info.txt
+
+For example:
+
+    bing-20260622-info.txt
+
+Read it with:
+
+    bing-wallpaper info

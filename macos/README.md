@@ -24,6 +24,7 @@ Automatic runs are handled by launchd.
 After installing:
 
     bing-wallpaper status
+    bing-wallpaper info
     bing-wallpaper disable
     bing-wallpaper enable
     bing-wallpaper
@@ -46,3 +47,19 @@ From the repository root:
 
     cd macos
     ./uninstall.sh
+
+## Image information note
+
+The updater writes a human-readable note for the current Bing image beside the downloaded wallpaper.
+
+The note uses this naming pattern:
+
+    bing-YYYYMMDD-info.txt
+
+For example:
+
+    bing-20260622-info.txt
+
+Read it with:
+
+    bing-wallpaper info

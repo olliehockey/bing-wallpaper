@@ -16,6 +16,7 @@
 #   bing-wallpaper-macos enable   Enable automatic updates
 #   bing-wallpaper-macos disable  Disable automatic updates
 #   bing-wallpaper-macos status   Show current status
+#   bing-wallpaper-macos info     Show current Bing image information
 
 set -euo pipefail
 
@@ -91,6 +92,62 @@ APPLESCRIPT
   return 1
 }
 
+
+write_info_file() {
+  local json_file="$1"
+  local end_date="$2"
+  local image_file="$3"
+
+  if [[ ! -f "$json_file" || -z "$end_date" ]]; then
+    return 0
+  fi
+
+  local title copyright copyright_link info_file
+
+  title="$(/usr/bin/plutil -extract images.0.title raw -o - "$json_file" 2>/dev/null || true)"
+  copyright="$(/usr/bin/plutil -extract images.0.copyright raw -o - "$json_file" 2>/dev/null || true)"
+  copyright_link="$(/usr/bin/plutil -extract images.0.copyrightlink raw -o - "$json_file" 2>/dev/null || true)"
+
+  info_file="$WALLPAPER_DIR/bing-$end_date-info.txt"
+
+  cat > "$info_file" <<INFO
+Bing wallpaper of the day
+
+Date: $end_date
+Market: $MARKET
+Image file: $image_file
+
+Title:
+${title:-Unavailable}
+
+Copyright:
+${copyright:-Unavailable}
+
+Source:
+${copyright_link:-Unavailable}
+INFO
+}
+
+get_current_info_file() {
+  local end_date info_file
+
+  if [[ -f "$JSON_FILE" ]]; then
+    end_date="$(/usr/bin/plutil -extract images.0.enddate raw -o - "$JSON_FILE" 2>/dev/null || true)"
+    if [[ -n "$end_date" ]]; then
+      info_file="$WALLPAPER_DIR/bing-$end_date-info.txt"
+      if [[ -f "$info_file" ]]; then
+        echo "$info_file"
+        return 0
+      fi
+    fi
+  fi
+
+  local info_files=("$WALLPAPER_DIR"/bing-*-info.txt(N))
+  if (( ${#info_files[@]} > 0 )); then
+    echo "${info_files[-1]}"
+  fi
+}
+
 print_usage() {
   cat <<USAGE
 Usage:
@@ -98,6 +155,7 @@ Usage:
   bing-wallpaper-macos enable   Enable automatic wallpaper updates
   bing-wallpaper-macos disable  Disable automatic wallpaper updates
   bing-wallpaper-macos status   Show whether updates are enabled or disabled
+  bing-wallpaper-macos info     Show current Bing image information
 USAGE
 }
 
@@ -124,6 +182,34 @@ case "${1:-run}" in
     echo "Run this to re-enable:"
     echo "  bing-wallpaper enable"
     exit 0
+    ;;
+
+  info)
+    INFO_FILE="$(get_current_info_file)"
+
+    if [[ -z "$INFO_FILE" && -f "$JSON_FILE" ]]; then
+      INFO_END_DATE="$(/usr/bin/plutil -extract images.0.enddate raw -o - "$JSON_FILE" 2>/dev/null || true)"
+
+      if [[ -n "$INFO_END_DATE" ]]; then
+        INFO_IMAGE=""
+        if [[ -f "$WALLPAPER_DIR/bing-$INFO_END_DATE-UHD.jpg" ]]; then
+          INFO_IMAGE="$WALLPAPER_DIR/bing-$INFO_END_DATE-UHD.jpg"
+        elif [[ -f "$WALLPAPER_DIR/bing-$INFO_END_DATE.jpg" ]]; then
+          INFO_IMAGE="$WALLPAPER_DIR/bing-$INFO_END_DATE.jpg"
+        fi
+
+        write_info_file "$JSON_FILE" "$INFO_END_DATE" "$INFO_IMAGE"
+        INFO_FILE="$(get_current_info_file)"
+      fi
+    fi
+
+    if [[ -n "$INFO_FILE" && -f "$INFO_FILE" ]]; then
+      cat "$INFO_FILE"
+      exit 0
+    fi
+
+    echo "No Bing wallpaper info file found yet."
+    exit 1
     ;;
 
   status)
@@ -155,6 +241,11 @@ case "${1:-run}" in
     CURRENT_WALLPAPER="$(get_current_wallpaper || true)"
     if [[ -n "$CURRENT_WALLPAPER" ]]; then
       echo "Current wallpaper: $CURRENT_WALLPAPER"
+    fi
+
+    INFO_FILE="$(get_current_info_file)"
+    if [[ -n "$INFO_FILE" ]]; then
+      echo "Info file: $INFO_FILE"
     fi
 
     exit 0
@@ -204,6 +295,7 @@ if [[ "$LAST_SUCCESS" == "$TODAY" && -n "$EXPECTED_IMAGE" ]]; then
   CURRENT_WALLPAPER="$(get_current_wallpaper || true)"
 
   if [[ "$CURRENT_WALLPAPER" == "$EXPECTED_IMAGE" ]]; then
+    write_info_file "$JSON_FILE" "$EXPECTED_END_DATE" "$EXPECTED_IMAGE"
     echo "Wallpaper already successfully updated today ($TODAY). Local image exists and is currently set: $EXPECTED_IMAGE. Leaving as-is."
     exit 0
   fi
@@ -219,6 +311,7 @@ if [[ "$LAST_SUCCESS" == "$TODAY" && -n "$EXPECTED_IMAGE" ]]; then
 
   killall WallpaperAgent 2>/dev/null || true
   echo "$TODAY" > "$SUCCESS_FILE"
+  write_info_file "$JSON_FILE" "$EXPECTED_END_DATE" "$EXPECTED_IMAGE"
   echo "Restored wallpaper to $EXPECTED_IMAGE"
   exit 0
 fi
@@ -270,10 +363,18 @@ fi
 killall WallpaperAgent 2>/dev/null || true
 
 echo "$TODAY" > "$SUCCESS_FILE"
+write_info_file "$JSON_FILE" "$END_DATE" "$IMAGE_FILE"
 
 for old_image in "$WALLPAPER_DIR"/bing-*.jpg(N); do
   if [[ "$old_image" != "$IMAGE_FILE" ]]; then
     rm -f -- "$old_image"
+  fi
+done
+
+INFO_FILE="$WALLPAPER_DIR/bing-$END_DATE-info.txt"
+for old_info in "$WALLPAPER_DIR"/bing-*-info.txt(N); do
+  if [[ "$old_info" != "$INFO_FILE" ]]; then
+    rm -f -- "$old_info"
   fi
 done
 
