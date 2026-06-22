@@ -161,7 +161,6 @@ Examples:
 
 The short command is a symlink to the installed `bing-wallpaper-macos` script.
 
-
 ## Managed wallpaper behaviour
 
 When updates are enabled, the project treats the Bing wallpaper as the managed desktop wallpaper.
@@ -174,7 +173,6 @@ The LaunchAgent runs periodically. On each run:
 - if updates are disabled, it leaves the current wallpaper unchanged
 
 This means `bing-wallpaper disable` is the correct way to temporarily use another wallpaper without the updater changing it back.
-
 
 ## Enable or disable updates
 
@@ -194,7 +192,6 @@ Check status:
 
 Disabling updates does not delete the current wallpaper or change the desktop. It creates a small `.disabled` marker file in `~/Pictures/Bing Wallpaper/`. While that marker exists, scheduled launchd runs exit without downloading or setting a wallpaper.
 
-
 ## Attribution
 
 This project is a macOS adaptation of the general idea behind the GNOME “Bing Wallpaper” extension: automatically using Bing’s daily image as the desktop wallpaper.
@@ -204,12 +201,6 @@ The original GNOME extension that inspired this project is [neffo/bing-wallpaper
 This repository is not a direct port and does not reuse the GNOME Shell extension codebase. It implements the idea separately for macOS using `launchd`, zsh, Bing's wallpaper metadata endpoint, and macOS wallpaper-setting tools.
 
 See [ATTRIBUTION.md](ATTRIBUTION.md) for more detail.
-
-## AI assistance
-
-This project was developed with assistance from ChatGPT. AI assistance was used to help design the macOS workflow, write and debug the shell script, improve retry behaviour, and draft documentation.
-
-The final code was tested locally by the repository owner. See [AI_ASSISTANCE.md](AI_ASSISTANCE.md) for more detail.
 
 ## Code overview
 
@@ -245,4 +236,3 @@ On macOS, it kickstarts the LaunchAgent.
 On Windows, it starts the Scheduled Task.
 
 This means re-enabling updates immediately restores or updates the wallpaper instead of waiting for the next scheduled interval.
-

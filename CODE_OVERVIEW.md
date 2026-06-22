@@ -141,4 +141,3 @@ On macOS, this is done with `launchctl kickstart` for the LaunchAgent.
 On Windows, this is done with `Start-ScheduledTask` for the `Bing Wallpaper` Scheduled Task.
 
 If the scheduler entry is not loaded or registered, the updater falls back to running directly.
-
