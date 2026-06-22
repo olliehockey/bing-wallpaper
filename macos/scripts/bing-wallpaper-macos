@@ -39,6 +39,57 @@ else
   MARKET="$DEFAULT_MARKET"
 fi
 
+
+VALID_MARKETS=(
+  en-GB
+  en-US
+  en-AU
+  en-CA
+  en-IN
+  fr-FR
+  fr-CA
+  de-DE
+  es-ES
+  es-MX
+  it-IT
+  ja-JP
+  ko-KR
+  pt-BR
+  zh-CN
+  zh-HK
+  zh-TW
+  nl-NL
+)
+
+is_valid_market() {
+  local candidate="$1"
+  local valid_market
+
+  for valid_market in "${VALID_MARKETS[@]}"; do
+    if [[ "$candidate" == "$valid_market" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+print_market_list() {
+  echo "Supported markets:"
+  echo
+
+  local valid_market
+  for valid_market in "${VALID_MARKETS[@]}"; do
+    echo "  $valid_market"
+  done
+}
+
+if ! is_valid_market "$MARKET"; then
+  echo "Saved/default market is not supported: $MARKET"
+  echo "Falling back to en-GB."
+  MARKET="en-GB"
+fi
+
 get_desktoppr_bin() {
   if [[ -x /usr/local/bin/desktoppr ]]; then
     echo "/usr/local/bin/desktoppr"
@@ -177,6 +228,9 @@ Commands:
   bing-wallpaper market
       Show the current Bing market.
 
+  bing-wallpaper market list
+      Show supported Bing markets.
+
   bing-wallpaper market MARKET
       Change the Bing market, clear the success marker, and request an
       immediate updater run.
@@ -199,6 +253,7 @@ print_market_usage() {
 Usage:
   bing-wallpaper market
   bing-wallpaper market MARKET
+  bing-wallpaper market list
   bing-wallpaper market reset
 
 Show or change the Bing market.
@@ -209,6 +264,7 @@ Examples:
   bing-wallpaper market en-US
   bing-wallpaper market fr-FR
   bing-wallpaper market de-DE
+  bing-wallpaper market list
   bing-wallpaper market reset
 
 Market format:
@@ -354,13 +410,19 @@ case "${1:-run}" in
 
     NEW_MARKET="$2"
 
+    if [[ "$NEW_MARKET" == "list" ]]; then
+      print_market_list
+      exit 0
+    fi
+
     if [[ "$NEW_MARKET" == "reset" ]]; then
       rm -f "$MARKET_FILE"
       MARKET="$DEFAULT_MARKET"
       echo "Market reset to default: $MARKET"
-    elif [[ ! "$NEW_MARKET" == [a-z][a-z]-[A-Z][A-Z] ]]; then
-      echo "Invalid market: $NEW_MARKET"
-      echo "Expected format like en-GB, en-US, fr-FR, de-DE."
+    elif ! is_valid_market "$NEW_MARKET"; then
+      echo "Invalid or unsupported market: $NEW_MARKET"
+      echo
+      print_market_list
       exit 2
     else
       echo "$NEW_MARKET" > "$MARKET_FILE"

@@ -178,6 +178,10 @@ Show the current market:
 
     bing-wallpaper market
 
+List supported markets:
+
+    bing-wallpaper market list
+
 Change market:
 
     bing-wallpaper market en-US
@@ -188,3 +192,9 @@ Reset to the default market:
     bing-wallpaper market reset
 
 Changing market clears the last successful update marker and immediately requests a new updater run.
+
+Invalid markets are rejected. Use:
+
+    bing-wallpaper market list
+
+to see supported values.

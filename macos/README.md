@@ -69,6 +69,10 @@ Show the current market:
 
     bing-wallpaper market
 
+List supported markets:
+
+    bing-wallpaper market list
+
 Change market:
 
     bing-wallpaper market en-US
@@ -102,3 +106,9 @@ Show enable/disable help:
 
     bing-wallpaper enable --help
     bing-wallpaper disable --help
+
+Invalid markets are rejected. Use:
+
+    bing-wallpaper market list
+
+to see supported values.

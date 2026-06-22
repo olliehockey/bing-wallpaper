@@ -28,6 +28,34 @@ else {
     $Market = $DefaultMarket
 }
 
+
+$ValidMarkets = @(
+    "en-GB",
+    "en-US",
+    "en-AU",
+    "en-CA",
+    "en-IN",
+    "fr-FR",
+    "fr-CA",
+    "de-DE",
+    "es-ES",
+    "es-MX",
+    "it-IT",
+    "ja-JP",
+    "ko-KR",
+    "pt-BR",
+    "zh-CN",
+    "zh-HK",
+    "zh-TW",
+    "nl-NL"
+)
+
+if ($ValidMarkets -notcontains $Market) {
+    Write-Host "Saved/default market is not supported: $Market"
+    Write-Host "Falling back to en-GB."
+    $Market = "en-GB"
+}
+
 function Get-CurrentWallpaper {
     try {
         $item = Get-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name WallPaper -ErrorAction Stop
@@ -230,6 +258,9 @@ function Show-Usage {
     Write-Host "  bing-wallpaper market"
     Write-Host "      Show the current Bing market."
     Write-Host ""
+    Write-Host "  bing-wallpaper market list"
+    Write-Host "      Show supported Bing markets."
+    Write-Host ""
     Write-Host "  bing-wallpaper market MARKET"
     Write-Host "      Change the Bing market, clear the success marker, and request an"
     Write-Host "      immediate updater run."
@@ -244,10 +275,21 @@ function Show-Usage {
     Write-Host "      Re-enable updates and request an immediate updater run."}
 
 
+
+function Show-MarketList {
+    Write-Host "Supported markets:"
+    Write-Host ""
+
+    foreach ($ValidMarket in $ValidMarkets) {
+        Write-Host "  $ValidMarket"
+    }
+}
+
 function Show-MarketUsage {
     Write-Host "Usage:"
     Write-Host "  bing-wallpaper market"
     Write-Host "  bing-wallpaper market MARKET"
+    Write-Host "  bing-wallpaper market list"
     Write-Host "  bing-wallpaper market reset"
     Write-Host ""
     Write-Host "Show or change the Bing market."
@@ -395,7 +437,13 @@ switch ($Command) {
             Write-Host "  bing-wallpaper market en-GB"
             Write-Host ""
             Write-Host "Reset to default with:"
+            Write-Host "  bing-wallpaper market list"
             Write-Host "  bing-wallpaper market reset"
+            exit 0
+        }
+
+        if ($Argument -eq "list") {
+            Show-MarketList
             exit 0
         }
 
@@ -404,9 +452,10 @@ switch ($Command) {
             $Market = $DefaultMarket
             Write-Host "Market reset to default: $Market"
         }
-        elseif ($Argument -notmatch '^[a-z]{2}-[A-Z]{2}$') {
-            Write-Host "Invalid market: $Argument"
-            Write-Host "Expected format like en-GB, en-US, fr-FR, de-DE."
+        elseif ($ValidMarkets -notcontains $Argument) {
+            Write-Host "Invalid or unsupported market: $Argument"
+            Write-Host ""
+            Show-MarketList
             exit 2
         }
         else {
