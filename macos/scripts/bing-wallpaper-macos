@@ -24,6 +24,7 @@ WALLPAPER_DIR="$HOME/Pictures/Bing Wallpaper"
 JSON_FILE="$WALLPAPER_DIR/latest.json"
 SUCCESS_FILE="$WALLPAPER_DIR/.last-success-date"
 DISABLED_FILE="$WALLPAPER_DIR/.disabled"
+LAUNCHD_LABEL="com.bing-wallpaper-macos.agent"
 
 mkdir -p "$WALLPAPER_DIR"
 
@@ -104,8 +105,16 @@ case "${1:-run}" in
   enable)
     rm -f "$DISABLED_FILE"
     echo "Bing wallpaper updates enabled."
-    echo "The next launchd run will update or restore the wallpaper if needed."
-    exit 0
+    echo "Triggering a launchd run now."
+
+    if launchctl print "gui/$(id -u)/$LAUNCHD_LABEL" >/dev/null 2>&1; then
+      launchctl kickstart -k "gui/$(id -u)/$LAUNCHD_LABEL"
+      echo "LaunchAgent triggered."
+      exit 0
+    fi
+
+    echo "LaunchAgent is not currently loaded. Running updater directly instead."
+    exec "$0"
     ;;
 
   disable)

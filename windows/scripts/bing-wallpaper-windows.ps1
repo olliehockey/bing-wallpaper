@@ -10,6 +10,7 @@ $WallpaperDir = Join-Path $env:USERPROFILE "Pictures\Bing Wallpaper"
 $JsonFile = Join-Path $WallpaperDir "latest.json"
 $SuccessFile = Join-Path $WallpaperDir ".last-success-date"
 $DisabledFile = Join-Path $WallpaperDir ".disabled"
+$TaskName = "Bing Wallpaper"
 
 New-Item -ItemType Directory -Path $WallpaperDir -Force | Out-Null
 
@@ -128,8 +129,21 @@ switch ($Command) {
     "enable" {
         Remove-Item -LiteralPath $DisabledFile -Force -ErrorAction SilentlyContinue
         Write-Host "Bing wallpaper updates enabled."
-        Write-Host "The next scheduled run will update or restore the wallpaper if needed."
-        exit 0
+        Write-Host "Triggering a Scheduled Task run now."
+
+        $Task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+
+        if ($Task) {
+            Start-ScheduledTask -TaskName $TaskName
+            Write-Host "Scheduled Task triggered."
+            exit 0
+        }
+
+        Write-Host "Scheduled Task is not currently registered. Running updater directly instead."
+
+        $ScriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
+        & $ScriptPath
+        exit $LASTEXITCODE
     }
 
     "disable" {

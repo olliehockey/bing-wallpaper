@@ -234,3 +234,15 @@ Install it explicitly from PowerShell:
 
 The Windows installer creates a user-level scheduled task and a `bing-wallpaper` command for that Windows user.
 
+## Enable behaviour
+
+On both supported platforms, `bing-wallpaper enable` does more than remove the disabled marker.
+
+It also triggers an immediate updater run.
+
+On macOS, it kickstarts the LaunchAgent.
+
+On Windows, it starts the Scheduled Task.
+
+This means re-enabling updates immediately restores or updates the wallpaper instead of waiting for the next scheduled interval.
+

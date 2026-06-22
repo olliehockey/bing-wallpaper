@@ -132,3 +132,13 @@ The Windows version uses PowerShell, Windows Task Scheduler, the user's Pictures
 
 It follows the same managed wallpaper behaviour as the macOS version: retry until successful, re-download if the image is deleted, and restore the Bing wallpaper if the desktop wallpaper is changed while updates are enabled.
 
+## Enable command behaviour
+
+The `enable` command removes the disabled marker and then immediately triggers a scheduler run.
+
+On macOS, this is done with `launchctl kickstart` for the LaunchAgent.
+
+On Windows, this is done with `Start-ScheduledTask` for the `Bing Wallpaper` Scheduled Task.
+
+If the scheduler entry is not loaded or registered, the updater falls back to running directly.
+
