@@ -1,5 +1,7 @@
 # bing-wallpaper-macOS
 
+This project is unofficial and is not affiliated with Microsoft or Bing. Bing images and trademarks belong to their respective owners.
+
 Automatically download Bing's daily "image of the day" and set it as your macOS desktop wallpaper — once a day, with safe retries if you're offline, and no third-party app or menu bar icon required.
 
 <p align="center">
