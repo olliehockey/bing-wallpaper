@@ -1,71 +1,54 @@
 #!/bin/zsh
-#
-# install.sh — installs bing-wallpaper-macos for the current user.
-#
-#   * Copies the script to ~/.local/bin/bing-wallpaper-macos
-#   * Installs a LaunchAgent that runs it at login, at midnight, and
-#     every 10 minutes thereafter (it no-ops once it has already
-#     succeeded that day, so this is cheap)
-#   * Runs it once immediately so you see a result right away
-#
-# Usage:
-#   ./install.sh                  # uses default market (en-GB)
-#   BING_MARKET=en-US ./install.sh
-#
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-INSTALL_DIR="$HOME/.local/bin"
-INSTALL_PATH="$INSTALL_DIR/bing-wallpaper-macos"
-LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
-PLIST_LABEL="com.bing-wallpaper-macos.agent"
-PLIST_PATH="$LAUNCH_AGENTS_DIR/$PLIST_LABEL.plist"
-MARKET="${BING_MARKET:-en-GB}"
+OS_NAME="$(uname -s 2>/dev/null || echo unknown)"
 
-echo "==> Installing bing-wallpaper-macos"
-echo "    Market: $MARKET (override with BING_MARKET=xx-XX ./install.sh)"
+echo "bing-wallpaper platform installer guide"
+echo
 
-mkdir -p "$INSTALL_DIR"
-mkdir -p "$LAUNCH_AGENTS_DIR"
+case "$OS_NAME" in
+  Darwin)
+    echo "Detected platform: macOS"
+    echo
+    echo "To install the macOS version, run:"
+    echo
+    echo "  cd macos"
+    echo "  ./install.sh"
+    ;;
 
-echo "==> Copying script to $INSTALL_PATH"
-cp "$SCRIPT_DIR/scripts/bing-wallpaper-macos" "$INSTALL_PATH"
-chmod +x "$INSTALL_PATH"
+  MINGW*|MSYS*|CYGWIN*)
+    echo "Detected platform: Windows shell"
+    echo
+    echo "To install the Windows version, run from PowerShell:"
+    echo
+    echo "  cd windows"
+    echo "  .\\install.ps1"
+    ;;
 
-echo "==> Writing LaunchAgent to $PLIST_PATH"
-# Substitute the real install path and chosen market into the plist
-# template. The market is passed via EnvironmentVariables so the
-# script itself never needs to be edited per-install.
-sed -e "s|__INSTALL_PATH__|$INSTALL_PATH|" \
-    -e "s|__BING_MARKET__|$MARKET|" \
-	"$SCRIPT_DIR/LaunchAgents/$PLIST_LABEL.plist.template" > "$PLIST_PATH"
+  Linux)
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+      echo "Detected platform: WSL/Linux on Windows"
+      echo
+      echo "Do not install from WSL. Use PowerShell on Windows instead:"
+      echo
+      echo "  cd windows"
+      echo "  .\\install.ps1"
+    else
+      echo "Detected platform: Linux"
+      echo
+      echo "Linux is not currently supported by this repo."
+    fi
+    ;;
 
-/usr/bin/plutil -lint "$PLIST_PATH" >/dev/null
-
-echo "==> Loading LaunchAgent"
-# Unload first in case this is a re-install.
-launchctl bootout "gui/$(id -u)/$PLIST_LABEL" >/dev/null 2>&1 || true
-launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH"
-
-echo "==> Running once now so you see a result immediately..."
-"$INSTALL_PATH" || {
-	echo
-	echo "Note: the first run reported an error above (often just a"
-	echo "missing network connection). The LaunchAgent will keep"
-	echo "retrying automatically — see 'Troubleshooting' in the README."
-}
+  *)
+    echo "Could not confidently detect this platform."
+    echo
+    echo "Choose explicitly:"
+    echo
+    echo "  macOS:   cd macos && ./install.sh"
+    echo "  Windows: cd windows; .\\install.ps1"
+    ;;
+esac
 
 echo
-echo "==> Done."
-echo "    Wallpaper images and logs:  $HOME/Pictures/Bing Wallpaper"
-echo "    Script installed at:        $INSTALL_PATH"
-echo "    LaunchAgent:                $PLIST_PATH"
-echo "    stdout log:                 /tmp/bing-wallpaper.out.log"
-echo "    stderr log:                 /tmp/bing-wallpaper.err.log"
-echo
-echo "    To uninstall, run: ./uninstall.sh"
-
-# Create short convenience command.
-SHORT_COMMAND_PATH="$HOME/.local/bin/bing-wallpaper"
-ln -sf "$INSTALL_PATH" "$SHORT_COMMAND_PATH"
-echo "    Short command:             $SHORT_COMMAND_PATH"
+echo "This root script is only a guide. It does not install anything."

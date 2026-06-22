@@ -1,5 +1,25 @@
 # bing-wallpaper-macOS
 
+## Platform installers
+
+This repository is split by platform.
+
+The root `install.sh` and `uninstall.sh` files are only guide scripts. They detect the current platform and print the correct platform-specific command, but they do not install or uninstall anything themselves.
+
+Installers must be selected explicitly.
+
+For macOS:
+
+    cd macos
+    ./install.sh
+
+For Windows, once Windows support is implemented:
+
+    cd windows
+    .\install.ps1
+
+The macOS installer does not install Windows files, and the Windows installer will not install macOS files.
+
 This project is unofficial and is not affiliated with Microsoft or Bing. Bing images and trademarks belong to their respective owners.
 
 Automatically download Bing's daily "image of the day" and set it as your macOS desktop wallpaper — once a day, with safe retries if you're offline, and no third-party app or menu bar icon required.

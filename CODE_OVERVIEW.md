@@ -100,3 +100,17 @@ If the image exists but the desktop wallpaper has been changed, the script resto
 
 If updates are disabled using `bing-wallpaper disable`, the script exits immediately and leaves the current desktop wallpaper unchanged.
 
+## Platform layout
+
+The repository is split by platform.
+
+macOS-specific files live in:
+
+    macos/
+
+Windows-specific files will live in:
+
+    windows/
+
+The root `install.sh` and `uninstall.sh` files are guide scripts only. They do not install anything directly. The user must explicitly choose the platform installer.
+

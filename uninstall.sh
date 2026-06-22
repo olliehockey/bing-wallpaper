@@ -1,46 +1,54 @@
 #!/bin/zsh
-#
-# uninstall.sh — removes bing-wallpaper-macos for the current user.
-#
-# Always removes: the LaunchAgent and the installed script.
-# Asks before removing: the downloaded wallpaper images/logs, since
-# those are user content you may want to keep.
-#
 set -euo pipefail
 
-INSTALL_PATH="$HOME/.local/bin/bing-wallpaper-macos"
-PLIST_LABEL="com.bing-wallpaper-macos.agent"
-PLIST_PATH="$HOME/Library/LaunchAgents/$PLIST_LABEL.plist"
-WALLPAPER_DIR="$HOME/Pictures/Bing Wallpaper"
+OS_NAME="$(uname -s 2>/dev/null || echo unknown)"
 
-echo "==> Unloading LaunchAgent"
-launchctl bootout "gui/$(id -u)/$PLIST_LABEL" >/dev/null 2>&1 || true
+echo "bing-wallpaper platform uninstaller guide"
+echo
 
-if [[ -f "$PLIST_PATH" ]]; then
-	echo "==> Removing $PLIST_PATH"
-	rm -f "$PLIST_PATH"
-fi
+case "$OS_NAME" in
+  Darwin)
+    echo "Detected platform: macOS"
+    echo
+    echo "To uninstall the macOS version, run:"
+    echo
+    echo "  cd macos"
+    echo "  ./uninstall.sh"
+    ;;
 
-if [[ -f "$INSTALL_PATH" ]]; then
-	echo "==> Removing $INSTALL_PATH"
-	rm -f "$INSTALL_PATH"
-fi
+  MINGW*|MSYS*|CYGWIN*)
+    echo "Detected platform: Windows shell"
+    echo
+    echo "To uninstall the Windows version, run from PowerShell:"
+    echo
+    echo "  cd windows"
+    echo "  .\\uninstall.ps1"
+    ;;
 
-rm -f /tmp/bing-wallpaper.out.log /tmp/bing-wallpaper.err.log
+  Linux)
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+      echo "Detected platform: WSL/Linux on Windows"
+      echo
+      echo "Do not uninstall from WSL. Use PowerShell on Windows instead:"
+      echo
+      echo "  cd windows"
+      echo "  .\\uninstall.ps1"
+    else
+      echo "Detected platform: Linux"
+      echo
+      echo "Linux is not currently supported by this repo."
+    fi
+    ;;
 
-if [[ -d "$WALLPAPER_DIR" ]]; then
-	echo
-	read "REPLY?Also delete downloaded wallpapers in '$WALLPAPER_DIR'? [y/N] "
-	if [[ "$REPLY" == "y" || "$REPLY" == "Y" ]]; then
-		rm -rf "$WALLPAPER_DIR"
-		echo "==> Removed $WALLPAPER_DIR"
-	else
-		echo "==> Left $WALLPAPER_DIR in place"
-	fi
-fi
+  *)
+    echo "Could not confidently detect this platform."
+    echo
+    echo "Choose explicitly:"
+    echo
+    echo "  macOS:   cd macos && ./uninstall.sh"
+    echo "  Windows: cd windows; .\\uninstall.ps1"
+    ;;
+esac
 
 echo
-echo "==> Uninstalled."
-
-# Remove short convenience command.
-rm -f "$HOME/.local/bin/bing-wallpaper"
+echo "This root script is only a guide. It does not uninstall anything."
