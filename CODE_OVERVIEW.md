@@ -114,3 +114,21 @@ Windows-specific files will live in:
 
 The root `install.sh` and `uninstall.sh` files are guide scripts only. They do not install anything directly. The user must explicitly choose the platform installer.
 
+## Windows implementation
+
+The Windows implementation lives in:
+
+    windows/
+
+The main updater is:
+
+    windows/scripts/bing-wallpaper-windows.ps1
+
+The installer is:
+
+    windows/install.ps1
+
+The Windows version uses PowerShell, Windows Task Scheduler, the user's Pictures folder, and a small `bing-wallpaper.cmd` launcher.
+
+It follows the same managed wallpaper behaviour as the macOS version: retry until successful, re-download if the image is deleted, and restore the Bing wallpaper if the desktop wallpaper is changed while updates are enabled.
+

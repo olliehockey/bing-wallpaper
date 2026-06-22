@@ -13,7 +13,7 @@ For macOS:
     cd macos
     ./install.sh
 
-For Windows, once Windows support is implemented:
+For Windows:
 
     cd windows
     .\install.ps1
@@ -222,3 +222,15 @@ For a plain-English explanation of how the code works, see [CODE_OVERVIEW.md](CO
 This project is unofficial and is not affiliated with Microsoft, Bing, GNOME, or the maintainers of the GNOME Bing Wallpaper extension.
 
 Bing wallpaper images remain the property of their respective copyright holders and should only be used as wallpapers.
+
+## Windows support
+
+Windows support is included in the `windows/` folder.
+
+Install it explicitly from PowerShell:
+
+    cd windows
+    .\install.ps1
+
+The Windows installer creates a user-level scheduled task and a `bing-wallpaper` command for that Windows user.
+
