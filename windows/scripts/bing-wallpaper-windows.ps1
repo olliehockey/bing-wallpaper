@@ -1,18 +1,32 @@
 param(
     [Parameter(Position = 0)]
-    [string]$Command = "run"
+    [string]$Command = "run",
+
+    [Parameter(Position = 1)]
+    [string]$Argument = ""
 )
 
 $ErrorActionPreference = "Stop"
 
-$Market = if ($env:BING_MARKET) { $env:BING_MARKET } else { "en-GB" }
+$DefaultMarket = if ($env:BING_MARKET) { $env:BING_MARKET } else { "en-GB" }
 $WallpaperDir = Join-Path $env:USERPROFILE "Pictures\Bing Wallpaper"
 $JsonFile = Join-Path $WallpaperDir "latest.json"
 $SuccessFile = Join-Path $WallpaperDir ".last-success-date"
 $DisabledFile = Join-Path $WallpaperDir ".disabled"
+$MarketFile = Join-Path $WallpaperDir ".market"
 $TaskName = "Bing Wallpaper"
 
 New-Item -ItemType Directory -Path $WallpaperDir -Force | Out-Null
+
+if (Test-Path -LiteralPath $MarketFile) {
+    $Market = (Get-Content -LiteralPath $MarketFile -Raw).Trim()
+    if ([string]::IsNullOrWhiteSpace($Market)) {
+        $Market = $DefaultMarket
+    }
+}
+else {
+    $Market = $DefaultMarket
+}
 
 function Get-CurrentWallpaper {
     try {
@@ -204,6 +218,7 @@ function Show-Usage {
     Write-Host "  bing-wallpaper enable   Enable automatic wallpaper updates"
     Write-Host "  bing-wallpaper disable  Disable automatic wallpaper updates"
     Write-Host "  bing-wallpaper status   Show whether updates are enabled or disabled"
+    Write-Host "  bing-wallpaper market   Show or change the Bing market"
     Write-Host "  bing-wallpaper info     Show current Bing image information"
 }
 
@@ -237,6 +252,54 @@ switch ($Command) {
         Write-Host "Run this to re-enable:"
         Write-Host "  bing-wallpaper enable"
         exit 0
+    }
+
+    "market" {
+        if ([string]::IsNullOrWhiteSpace($Argument)) {
+            Write-Host "Current market: $Market"
+            Write-Host ""
+            Write-Host "Change market with:"
+            Write-Host "  bing-wallpaper market en-US"
+            Write-Host "  bing-wallpaper market en-GB"
+            Write-Host ""
+            Write-Host "Reset to default with:"
+            Write-Host "  bing-wallpaper market reset"
+            exit 0
+        }
+
+        if ($Argument -eq "reset") {
+            Remove-Item -LiteralPath $MarketFile -Force -ErrorAction SilentlyContinue
+            $Market = $DefaultMarket
+            Write-Host "Market reset to default: $Market"
+        }
+        elseif ($Argument -notmatch '^[a-z]{2}-[A-Z]{2}$') {
+            Write-Host "Invalid market: $Argument"
+            Write-Host "Expected format like en-GB, en-US, fr-FR, de-DE."
+            exit 2
+        }
+        else {
+            $Argument | Set-Content -LiteralPath $MarketFile -Encoding UTF8
+            $Market = $Argument
+            Write-Host "Market set to: $Market"
+        }
+
+        Remove-Item -LiteralPath $SuccessFile -Force -ErrorAction SilentlyContinue
+        Write-Host "Cleared last successful update marker so the new market can update immediately."
+        Write-Host "Triggering an updater run now."
+
+        $Task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+
+        if ($Task) {
+            Start-ScheduledTask -TaskName $TaskName
+            Write-Host "Scheduled Task triggered."
+            exit 0
+        }
+
+        Write-Host "Scheduled Task is not currently registered. Running updater directly instead."
+
+        $ScriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
+        & $ScriptPath
+        exit $LASTEXITCODE
     }
 
     "info" {
@@ -286,6 +349,8 @@ switch ($Command) {
             Write-Host "Status: enabled"
             Write-Host "Updates are allowed."
         }
+
+        Write-Host "Current market: $Market"
 
         if (Test-Path -LiteralPath $SuccessFile) {
             Write-Host "Last successful update: $((Get-Content -LiteralPath $SuccessFile -Raw).Trim())"

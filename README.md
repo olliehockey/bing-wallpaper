@@ -70,6 +70,7 @@ After installation, both platforms support:
 
     bing-wallpaper
     bing-wallpaper status
+    bing-wallpaper market
     bing-wallpaper disable
     bing-wallpaper enable
 
@@ -132,3 +133,22 @@ For example:
 Read it with:
 
     bing-wallpaper info
+
+## Market selection
+
+The updater supports changing the Bing market.
+
+Show the current market:
+
+    bing-wallpaper market
+
+Change market:
+
+    bing-wallpaper market en-US
+    bing-wallpaper market en-GB
+
+Reset to the default market:
+
+    bing-wallpaper market reset
+
+Changing market clears the last successful update marker and immediately requests a new updater run.

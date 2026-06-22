@@ -20,14 +20,24 @@
 
 set -euo pipefail
 
-MARKET="${BING_MARKET:-en-GB}"
+DEFAULT_MARKET="${BING_MARKET:-en-GB}"
 WALLPAPER_DIR="$HOME/Pictures/Bing Wallpaper"
 JSON_FILE="$WALLPAPER_DIR/latest.json"
 SUCCESS_FILE="$WALLPAPER_DIR/.last-success-date"
 DISABLED_FILE="$WALLPAPER_DIR/.disabled"
+MARKET_FILE="$WALLPAPER_DIR/.market"
 LAUNCHD_LABEL="com.bing-wallpaper-macos.agent"
 
 mkdir -p "$WALLPAPER_DIR"
+
+if [[ -f "$MARKET_FILE" ]]; then
+  MARKET="$(cat "$MARKET_FILE" 2>/dev/null | tr -d '[:space:]')"
+  if [[ -z "$MARKET" ]]; then
+    MARKET="$DEFAULT_MARKET"
+  fi
+else
+  MARKET="$DEFAULT_MARKET"
+fi
 
 get_desktoppr_bin() {
   if [[ -x /usr/local/bin/desktoppr ]]; then
@@ -155,6 +165,7 @@ Usage:
   bing-wallpaper-macos enable   Enable automatic wallpaper updates
   bing-wallpaper-macos disable  Disable automatic wallpaper updates
   bing-wallpaper-macos status   Show whether updates are enabled or disabled
+  bing-wallpaper-macos market   Show or change the Bing market
   bing-wallpaper-macos info     Show current Bing image information
 USAGE
 }
@@ -182,6 +193,49 @@ case "${1:-run}" in
     echo "Run this to re-enable:"
     echo "  bing-wallpaper enable"
     exit 0
+    ;;
+
+  market)
+    if [[ $# -lt 2 ]]; then
+      echo "Current market: $MARKET"
+      echo
+      echo "Change market with:"
+      echo "  bing-wallpaper market en-US"
+      echo "  bing-wallpaper market en-GB"
+      echo
+      echo "Reset to default with:"
+      echo "  bing-wallpaper market reset"
+      exit 0
+    fi
+
+    NEW_MARKET="$2"
+
+    if [[ "$NEW_MARKET" == "reset" ]]; then
+      rm -f "$MARKET_FILE"
+      MARKET="$DEFAULT_MARKET"
+      echo "Market reset to default: $MARKET"
+    elif [[ ! "$NEW_MARKET" == [a-z][a-z]-[A-Z][A-Z] ]]; then
+      echo "Invalid market: $NEW_MARKET"
+      echo "Expected format like en-GB, en-US, fr-FR, de-DE."
+      exit 2
+    else
+      echo "$NEW_MARKET" > "$MARKET_FILE"
+      MARKET="$NEW_MARKET"
+      echo "Market set to: $MARKET"
+    fi
+
+    rm -f "$SUCCESS_FILE"
+    echo "Cleared last successful update marker so the new market can update immediately."
+    echo "Requesting an updater run now."
+
+    if launchctl print "gui/$(id -u)/$LAUNCHD_LABEL" >/dev/null 2>&1; then
+      nohup launchctl kickstart -k "gui/$(id -u)/$LAUNCHD_LABEL" >/dev/null 2>&1 &
+      echo "LaunchAgent trigger requested."
+      exit 0
+    fi
+
+    echo "LaunchAgent is not currently loaded. Running updater directly instead."
+    exec "$0"
     ;;
 
   info)
@@ -224,6 +278,8 @@ case "${1:-run}" in
       echo "Status: enabled"
       echo "Updates are allowed."
     fi
+
+    echo "Current market: $MARKET"
 
     if [[ -f "$SUCCESS_FILE" ]]; then
       echo "Last successful update: $(cat "$SUCCESS_FILE")"
