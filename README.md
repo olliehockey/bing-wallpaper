@@ -42,7 +42,6 @@ From the repository root:
 
 The macOS installer creates:
 
-    ~/.local/bin/bing-wallpaper-macos
     ~/.local/bin/bing-wallpaper
 
 It also installs a LaunchAgent:

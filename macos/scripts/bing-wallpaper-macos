@@ -12,11 +12,11 @@
 # only after the wallpaper has actually been set, so failures can be retried.
 #
 # Usage:
-#   bing-wallpaper-macos          Run the updater normally
-#   bing-wallpaper-macos enable   Enable automatic updates
-#   bing-wallpaper-macos disable  Disable automatic updates
-#   bing-wallpaper-macos status   Show current status
-#   bing-wallpaper-macos info     Show current Bing image information
+#   bing-wallpaper          Run the updater normally
+#   bing-wallpaper enable   Enable automatic updates
+#   bing-wallpaper disable  Disable automatic updates
+#   bing-wallpaper status   Show current status
+#   bing-wallpaper info     Show current Bing image information
 
 set -euo pipefail
 
@@ -161,12 +161,12 @@ get_current_info_file() {
 print_usage() {
   cat <<USAGE
 Usage:
-  bing-wallpaper-macos          Run the updater normally
-  bing-wallpaper-macos enable   Enable automatic wallpaper updates
-  bing-wallpaper-macos disable  Disable automatic wallpaper updates
-  bing-wallpaper-macos status   Show whether updates are enabled or disabled
-  bing-wallpaper-macos market   Show or change the Bing market
-  bing-wallpaper-macos info     Show current Bing image information
+  bing-wallpaper          Run the updater normally
+  bing-wallpaper enable   Enable automatic wallpaper updates
+  bing-wallpaper disable  Disable automatic wallpaper updates
+  bing-wallpaper status   Show whether updates are enabled or disabled
+  bing-wallpaper market   Show or change the Bing market
+  bing-wallpaper info     Show current Bing image information
 USAGE
 }
 
@@ -310,7 +310,7 @@ case "${1:-run}" in
   run|"")
     ;;
 
-  -h|--help|help)
+  -h|-help|--help|help)
     print_usage
     exit 0
     ;;

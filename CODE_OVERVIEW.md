@@ -67,11 +67,7 @@ The macOS updater is:
 
 It is written as a zsh script.
 
-The macOS installer copies it to:
-
-    ~/.local/bin/bing-wallpaper-macos
-
-and creates a shorter symlink:
+The macOS installer creates the user-facing command:
 
     ~/.local/bin/bing-wallpaper
 

@@ -9,11 +9,7 @@ From the repository root:
     cd macos
     ./install.sh
 
-The installer copies the updater to:
-
-    ~/.local/bin/bing-wallpaper-macos
-
-It also creates the short command:
+The installer creates the user-facing command:
 
     ~/.local/bin/bing-wallpaper
 

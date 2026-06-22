@@ -22,7 +22,7 @@ PLIST_LABEL="com.bing-wallpaper-macos.agent"
 PLIST_PATH="$LAUNCH_AGENTS_DIR/$PLIST_LABEL.plist"
 MARKET="${BING_MARKET:-en-GB}"
 
-echo "==> Installing bing-wallpaper-macos"
+echo "==> Installing bing-wallpaper for macOS"
 echo "    Market: $MARKET (override with BING_MARKET=xx-XX ./install.sh)"
 
 mkdir -p "$INSTALL_DIR"
@@ -58,7 +58,7 @@ echo "==> Running once now so you see a result immediately..."
 echo
 echo "==> Done."
 echo "    Wallpaper images and logs:  $HOME/Pictures/Bing Wallpaper"
-echo "    Script installed at:        $INSTALL_PATH"
+echo "    Internal script:        $INSTALL_PATH"
 echo "    LaunchAgent:                $PLIST_PATH"
 echo "    stdout log:                 /tmp/bing-wallpaper.out.log"
 echo "    stderr log:                 /tmp/bing-wallpaper.err.log"
@@ -68,4 +68,4 @@ echo "    To uninstall, run: ./uninstall.sh"
 # Create short convenience command.
 SHORT_COMMAND_PATH="$HOME/.local/bin/bing-wallpaper"
 ln -sf "$INSTALL_PATH" "$SHORT_COMMAND_PATH"
-echo "    Short command:             $SHORT_COMMAND_PATH"
+echo "    Command:             $SHORT_COMMAND_PATH"
