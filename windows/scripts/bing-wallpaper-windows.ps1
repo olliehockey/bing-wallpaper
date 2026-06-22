@@ -241,25 +241,7 @@ function Show-Usage {
     Write-Host "      Pause automatic wallpaper updates without uninstalling."
     Write-Host ""
     Write-Host "  bing-wallpaper enable"
-    Write-Host "      Re-enable updates and request an immediate updater run."
-    Write-Host ""
-    Write-Host "Examples:"
-    Write-Host "  bing-wallpaper status"
-    Write-Host "  bing-wallpaper info"
-    Write-Host "  bing-wallpaper market en-GB"
-    Write-Host "  bing-wallpaper market en-US"
-    Write-Host "  bing-wallpaper market fr-FR"
-    Write-Host "  bing-wallpaper market de-DE"
-    Write-Host "  bing-wallpaper disable"
-    Write-Host "  bing-wallpaper enable"
-    Write-Host ""
-    Write-Host "More help:"
-    Write-Host "  bing-wallpaper status --help"
-    Write-Host "  bing-wallpaper info --help"
-    Write-Host "  bing-wallpaper market --help"
-    Write-Host "  bing-wallpaper enable --help"
-    Write-Host "  bing-wallpaper disable --help"
-}
+    Write-Host "      Re-enable updates and request an immediate updater run."}
 
 
 function Show-MarketUsage {

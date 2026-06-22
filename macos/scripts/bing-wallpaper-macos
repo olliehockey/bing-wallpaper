@@ -190,22 +190,6 @@ Commands:
   bing-wallpaper enable
       Re-enable updates and request an immediate updater run.
 
-Examples:
-  bing-wallpaper status
-  bing-wallpaper info
-  bing-wallpaper market en-GB
-  bing-wallpaper market en-US
-  bing-wallpaper market fr-FR
-  bing-wallpaper market de-DE
-  bing-wallpaper disable
-  bing-wallpaper enable
-
-More help:
-  bing-wallpaper status --help
-  bing-wallpaper info --help
-  bing-wallpaper market --help
-  bing-wallpaper enable --help
-  bing-wallpaper disable --help
 USAGE
 }
 
