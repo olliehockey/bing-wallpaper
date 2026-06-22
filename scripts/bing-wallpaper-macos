@@ -1,0 +1,94 @@
+#!/bin/zsh
+#
+# bing-wallpaper-macos
+# Downloads the current Bing "image of the day" and sets it as the
+# macOS desktop wallpaper. Designed to be run periodically (e.g. via
+# launchd) — it is safe to invoke many times a day, since it only
+# performs the download/update once per calendar day.
+#
+# Configuration (override via environment, e.g. in the LaunchAgent
+# plist's ProgramArguments, or by exporting before running manually):
+#
+#   BING_MARKET   Bing market/locale code, e.g. en-US, en-GB, ja-JP.
+#                 Defaults to en-GB. See https://learn.microsoft.com/
+#                 en-us/bing/search-apis/bing-web-search/reference/market-codes
+#
+set -euo pipefail
+
+MARKET="${BING_MARKET:-en-GB}"
+WALLPAPER_DIR="$HOME/Pictures/Bing Wallpaper"
+JSON_FILE="$WALLPAPER_DIR/latest.json"
+SUCCESS_FILE="$WALLPAPER_DIR/.last-success-date"
+
+mkdir -p "$WALLPAPER_DIR"
+
+TODAY="$(/bin/date +%F)"
+LAST_SUCCESS="$(cat "$SUCCESS_FILE" 2>/dev/null || true)"
+
+if [[ "$LAST_SUCCESS" == "$TODAY" ]]; then
+	echo "Wallpaper already successfully updated today ($TODAY). Leaving as-is."
+	exit 0
+fi
+
+TMP_JSON="$WALLPAPER_DIR/.latest.$$.json"
+TMP_IMAGE="$WALLPAPER_DIR/.bing.$$.jpg"
+
+cleanup_tmp() {
+	rm -f "$TMP_JSON" "$TMP_IMAGE"
+}
+trap cleanup_tmp EXIT
+
+API_URL="https://www.bing.com/HPImageArchive.aspx?format=js&uhd=1&idx=0&n=1&mkt=$MARKET"
+
+# If Wi-Fi/internet is unavailable, this fails and exits before changing anything.
+curl -fsSL --connect-timeout 15 --max-time 60 "$API_URL" -o "$TMP_JSON"
+
+URL_BASE=$(/usr/bin/plutil -extract images.0.urlbase raw -o - "$TMP_JSON")
+END_DATE=$(/usr/bin/plutil -extract images.0.enddate raw -o - "$TMP_JSON")
+
+UHD_URL="https://www.bing.com${URL_BASE}_UHD.jpg"
+IMAGE_FILE="$WALLPAPER_DIR/bing-$END_DATE-UHD.jpg"
+
+# Try UHD first. If unavailable, fall back to the normal Bing image.
+if ! curl -fsSL --connect-timeout 15 --max-time 120 "$UHD_URL" -o "$TMP_IMAGE"; then
+	rm -f "$TMP_IMAGE"
+	IMAGE_PATH=$(/usr/bin/plutil -extract images.0.url raw -o - "$TMP_JSON")
+	IMAGE_URL="https://www.bing.com$IMAGE_PATH"
+	IMAGE_FILE="$WALLPAPER_DIR/bing-$END_DATE.jpg"
+	curl -fsSL --connect-timeout 15 --max-time 120 "$IMAGE_URL" -o "$TMP_IMAGE"
+fi
+
+# Verify the downloaded file is a real image before applying anything.
+if ! /usr/bin/sips -g pixelWidth -g pixelHeight "$TMP_IMAGE" >/dev/null 2>&1; then
+	echo "Downloaded file was not a valid image. Leaving wallpaper unchanged."
+	exit 1
+fi
+
+mv "$TMP_JSON" "$JSON_FILE"
+mv "$TMP_IMAGE" "$IMAGE_FILE"
+
+BING_WALLPAPER_PATH="$IMAGE_FILE" /usr/bin/osascript <<'APPLESCRIPT'
+set wallpaperPath to system attribute "BING_WALLPAPER_PATH"
+
+tell application "System Events"
+	repeat with d in desktops
+		set picture of d to wallpaperPath
+	end repeat
+end tell
+APPLESCRIPT
+
+# Only after a successful wallpaper change, mark today as complete.
+echo "$TODAY" > "$SUCCESS_FILE"
+
+# Only after success, delete older Bing images.
+for old_image in "$WALLPAPER_DIR"/bing-*.jpg(N); do
+	if [[ "$old_image" != "$IMAGE_FILE" ]]; then
+		rm -f -- "$old_image"
+	fi
+done
+
+echo "Set wallpaper to $IMAGE_FILE"
+echo "Marked $TODAY as successfully updated."
+echo "Old Bing wallpapers cleaned up."
+
+/usr/bin/sips -g pixelWidth -g pixelHeight "$IMAGE_FILE" 2>/dev/null | tail -n 2
