@@ -124,6 +124,24 @@ rm "$HOME/Pictures/Bing Wallpaper/.last-success-date"
 
 MIT — see [LICENSE](LICENSE).
 
+## Short command
+
+The installer creates two command names:
+
+    bing-wallpaper-macos
+    bing-wallpaper
+
+They both run the same updater. The shorter command is provided for day-to-day use.
+
+Examples:
+
+    bing-wallpaper status
+    bing-wallpaper disable
+    bing-wallpaper enable
+
+The short command is a symlink to the installed `bing-wallpaper-macos` script.
+
+
 ## Enable or disable updates
 
 The LaunchAgent can stay installed while wallpaper updates are temporarily disabled.

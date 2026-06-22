@@ -76,3 +76,15 @@ Running:
 
 shows whether updates are currently enabled or disabled.
 
+## Short command alias
+
+The installer creates a short convenience command:
+
+    bing-wallpaper
+
+This is a symlink to the installed script:
+
+    bing-wallpaper-macos
+
+Both commands run the same updater and support the same arguments, including `enable`, `disable`, and `status`.
+

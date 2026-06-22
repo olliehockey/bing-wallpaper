@@ -41,3 +41,6 @@ fi
 
 echo
 echo "==> Uninstalled."
+
+# Remove short convenience command.
+rm -f "$HOME/.local/bin/bing-wallpaper"

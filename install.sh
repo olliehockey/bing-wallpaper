@@ -64,3 +64,8 @@ echo "    stdout log:                 /tmp/bing-wallpaper.out.log"
 echo "    stderr log:                 /tmp/bing-wallpaper.err.log"
 echo
 echo "    To uninstall, run: ./uninstall.sh"
+
+# Create short convenience command.
+SHORT_COMMAND_PATH="$HOME/.local/bin/bing-wallpaper"
+ln -sf "$INSTALL_PATH" "$SHORT_COMMAND_PATH"
+echo "    Short command:             $SHORT_COMMAND_PATH"
