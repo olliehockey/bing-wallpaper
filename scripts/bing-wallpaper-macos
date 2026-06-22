@@ -25,9 +25,15 @@ mkdir -p "$WALLPAPER_DIR"
 TODAY="$(/bin/date +%F)"
 LAST_SUCCESS="$(cat "$SUCCESS_FILE" 2>/dev/null || true)"
 
-if [[ "$LAST_SUCCESS" == "$TODAY" ]]; then
+CURRENT_WALLPAPER="$(/usr/bin/osascript -e 'tell application "System Events" to get picture of current desktop' 2>/dev/null || true)"
+
+if [[ "$LAST_SUCCESS" == "$TODAY" && -f "$CURRENT_WALLPAPER" ]]; then
 	echo "Wallpaper already successfully updated today ($TODAY). Leaving as-is."
 	exit 0
+fi
+
+if [[ "$LAST_SUCCESS" == "$TODAY" && ! -f "$CURRENT_WALLPAPER" ]]; then
+	echo "Today was marked successful, but the wallpaper file is missing. Re-downloading."
 fi
 
 TMP_JSON="$WALLPAPER_DIR/.latest.$$.json"
