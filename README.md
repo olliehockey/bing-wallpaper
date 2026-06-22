@@ -142,6 +142,20 @@ Examples:
 The short command is a symlink to the installed `bing-wallpaper-macos` script.
 
 
+## Managed wallpaper behaviour
+
+When updates are enabled, the project treats the Bing wallpaper as the managed desktop wallpaper.
+
+The LaunchAgent runs periodically. On each run:
+
+- if today's wallpaper has not been downloaded and set successfully, it tries again
+- if today's wallpaper file was deleted, it downloads it again
+- if today's wallpaper exists but the desktop is using a different wallpaper, it restores the Bing wallpaper
+- if updates are disabled, it leaves the current wallpaper unchanged
+
+This means `bing-wallpaper disable` is the correct way to temporarily use another wallpaper without the updater changing it back.
+
+
 ## Enable or disable updates
 
 The LaunchAgent can stay installed while wallpaper updates are temporarily disabled.

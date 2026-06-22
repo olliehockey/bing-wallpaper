@@ -88,3 +88,15 @@ This is a symlink to the installed script:
 
 Both commands run the same updater and support the same arguments, including `enable`, `disable`, and `status`.
 
+## Managed wallpaper behaviour
+
+When enabled, the script acts as a small wallpaper manager rather than just a once-per-day downloader.
+
+After a successful daily update, later scheduled runs still check that the expected Bing image exists and is still the current desktop wallpaper.
+
+If the image file has been deleted, the script downloads it again.
+
+If the image exists but the desktop wallpaper has been changed, the script restores the Bing wallpaper without re-downloading it.
+
+If updates are disabled using `bing-wallpaper disable`, the script exits immediately and leaves the current desktop wallpaper unchanged.
+
