@@ -11,14 +11,100 @@
 # The script is designed to be run repeatedly by launchd. It records success
 # only after the wallpaper has actually been set, so failures can be retried.
 #
+# Usage:
+#   bing-wallpaper-macos          Run the updater normally
+#   bing-wallpaper-macos enable   Enable automatic updates
+#   bing-wallpaper-macos disable  Disable automatic updates
+#   bing-wallpaper-macos status   Show current status
+#
 set -euo pipefail
 
 MARKET="${BING_MARKET:-en-GB}"
 WALLPAPER_DIR="$HOME/Pictures/Bing Wallpaper"
 JSON_FILE="$WALLPAPER_DIR/latest.json"
 SUCCESS_FILE="$WALLPAPER_DIR/.last-success-date"
+DISABLED_FILE="$WALLPAPER_DIR/.disabled"
 
 mkdir -p "$WALLPAPER_DIR"
+
+print_usage() {
+  cat <<USAGE
+Usage:
+  bing-wallpaper-macos          Run the updater normally
+  bing-wallpaper-macos enable   Enable automatic wallpaper updates
+  bing-wallpaper-macos disable  Disable automatic wallpaper updates
+  bing-wallpaper-macos status   Show whether updates are enabled or disabled
+USAGE
+}
+
+case "${1:-run}" in
+  enable)
+    rm -f "$DISABLED_FILE"
+    echo "Bing wallpaper updates enabled."
+    echo "The next launchd run will update the wallpaper if needed."
+    exit 0
+    ;;
+
+  disable)
+    /bin/date -u +"%Y-%m-%dT%H:%M:%SZ" > "$DISABLED_FILE"
+    echo "Bing wallpaper updates disabled."
+    echo "Current wallpaper has not been changed."
+    echo "Run this to re-enable:"
+    echo "  bing-wallpaper-macos enable"
+    exit 0
+    ;;
+
+  status)
+    if [[ -f "$DISABLED_FILE" ]]; then
+      echo "Status: disabled"
+      echo "Disabled marker: $DISABLED_FILE"
+      echo "Disabled since: $(cat "$DISABLED_FILE" 2>/dev/null || echo unknown)"
+      echo
+      echo "Run this to re-enable:"
+      echo "  bing-wallpaper-macos enable"
+    else
+      echo "Status: enabled"
+      echo "Updates are allowed."
+    fi
+
+    if [[ -f "$SUCCESS_FILE" ]]; then
+      echo "Last successful update: $(cat "$SUCCESS_FILE")"
+    else
+      echo "Last successful update: none recorded"
+    fi
+
+    if [[ -f "$JSON_FILE" ]]; then
+      END_DATE="$(/usr/bin/plutil -extract images.0.enddate raw -o - "$JSON_FILE" 2>/dev/null || true)"
+      if [[ -n "$END_DATE" ]]; then
+        echo "Latest recorded Bing image date: $END_DATE"
+      fi
+    fi
+
+    exit 0
+    ;;
+
+  run|"")
+    ;;
+
+  -h|--help|help)
+    print_usage
+    exit 0
+    ;;
+
+  *)
+    echo "Unknown command: $1"
+    echo
+    print_usage
+    exit 2
+    ;;
+esac
+
+if [[ -f "$DISABLED_FILE" ]]; then
+  echo "Bing wallpaper updates are disabled. Leaving wallpaper unchanged."
+  echo "Run this to re-enable:"
+  echo "  bing-wallpaper-macos enable"
+  exit 0
+fi
 
 TODAY="$(/bin/date +%F)"
 LAST_SUCCESS="$(cat "$SUCCESS_FILE" 2>/dev/null || true)"

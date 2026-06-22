@@ -124,6 +124,25 @@ rm "$HOME/Pictures/Bing Wallpaper/.last-success-date"
 
 MIT — see [LICENSE](LICENSE).
 
+## Enable or disable updates
+
+The LaunchAgent can stay installed while wallpaper updates are temporarily disabled.
+
+Disable automatic updates:
+
+    bing-wallpaper-macos disable
+
+Enable automatic updates again:
+
+    bing-wallpaper-macos enable
+
+Check status:
+
+    bing-wallpaper-macos status
+
+Disabling updates does not delete the current wallpaper or change the desktop. It creates a small `.disabled` marker file in `~/Pictures/Bing Wallpaper/`. While that marker exists, scheduled launchd runs exit without downloading or setting a wallpaper.
+
+
 ## Attribution
 
 This project is a macOS adaptation of the general idea behind the GNOME “Bing Wallpaper” extension: automatically using Bing’s daily image as the desktop wallpaper.

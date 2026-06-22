@@ -51,3 +51,28 @@ The script tries `desktoppr` first because it is a direct command-line wallpaper
 The project is designed to keep the current Bing wallpaper, not build a long-term wallpaper archive.
 
 After a successful update, old `bing-*.jpg` files are removed from the wallpaper folder.
+
+## Enable and disable behaviour
+
+The updater can be paused without uninstalling the LaunchAgent.
+
+Running:
+
+    bing-wallpaper-macos disable
+
+creates a `.disabled` marker file in `~/Pictures/Bing Wallpaper/`.
+
+When that marker exists, scheduled launchd runs exit immediately and leave the current wallpaper unchanged.
+
+Running:
+
+    bing-wallpaper-macos enable
+
+removes the marker file and allows the next scheduled run to update the wallpaper again.
+
+Running:
+
+    bing-wallpaper-macos status
+
+shows whether updates are currently enabled or disabled.
+
