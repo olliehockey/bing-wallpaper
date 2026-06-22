@@ -85,7 +85,7 @@ This removes the LaunchAgent and the installed script. It will ask before deleti
 
 On every invocation, the script:
 
-1. Checks `.last-success-date` — if it already matches today's date, it exits immediately. This is what makes it safe to run every 10 minutes.
+1. Checks `.last-success-date` and verifies the current wallpaper file still exists. If today is already marked successful and the wallpaper file exists, it exits immediately. If the wallpaper file has been deleted, it re-downloads and restores it.
 2. Downloads Bing's metadata JSON for the configured market.
 3. Downloads the UHD image (falling back to the standard-resolution image if UHD isn't available for that day's picture).
 4. Verifies the downloaded file is actually a valid image (via `sips`) before doing anything else with it — a failed or corrupt download never touches your existing wallpaper.
