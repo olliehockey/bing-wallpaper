@@ -14,6 +14,7 @@ $JsonFile = Join-Path $WallpaperDir "latest.json"
 $SuccessFile = Join-Path $WallpaperDir ".last-success-date"
 $DisabledFile = Join-Path $WallpaperDir ".disabled"
 $MarketFile = Join-Path $WallpaperDir ".market"
+$ProjectRepo = "https://github.com/olliehockey/bing-wallpaper"
 $TaskName = "Bing Wallpaper"
 
 New-Item -ItemType Directory -Path $WallpaperDir -Force | Out-Null
@@ -252,6 +253,10 @@ function Show-Usage {
     Write-Host "      Show whether updates are enabled, the current market, the latest recorded"
     Write-Host "      Bing image date, the current wallpaper path, and the info file path."
     Write-Host ""
+    Write-Host "  bing-wallpaper about"
+    Write-Host "      Show project, repository, license, and platform information."
+    Write-Host ""
+
     Write-Host "  bing-wallpaper info"
     Write-Host "      Print the current Bing image information note."
     Write-Host ""
@@ -314,6 +319,13 @@ function Show-MarketUsage {
     Write-Host ""
     Write-Host "Changing market clears the last successful update marker and requests an"
     Write-Host "immediate updater run."
+}
+
+function Show-AboutUsage {
+    Write-Host "Usage:"
+    Write-Host "  bing-wallpaper about"
+    Write-Host ""
+    Write-Host "Show project, repository, license, and platform information."
 }
 
 function Show-InfoUsage {
@@ -481,6 +493,19 @@ switch ($Command) {
         $ScriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
         & $ScriptPath
         exit $LASTEXITCODE
+    }
+
+    "about" {
+        if ($Argument -eq "--help" -or $Argument -eq "-h") {
+            Show-AboutUsage
+            exit 0
+        }
+
+        Write-Host "bing-wallpaper"
+        Write-Host "Repository: $ProjectRepo"
+        Write-Host "License: MIT"
+        Write-Host "Platform: Windows"
+        exit 0
     }
 
     "info" {

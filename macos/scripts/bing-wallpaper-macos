@@ -27,6 +27,7 @@ SUCCESS_FILE="$WALLPAPER_DIR/.last-success-date"
 DISABLED_FILE="$WALLPAPER_DIR/.disabled"
 MARKET_FILE="$WALLPAPER_DIR/.market"
 LAUNCHD_LABEL="com.bing-wallpaper-macos.agent"
+PROJECT_REPO="https://github.com/olliehockey/bing-wallpaper"
 
 mkdir -p "$WALLPAPER_DIR"
 
@@ -221,6 +222,9 @@ Commands:
   bing-wallpaper status
       Show whether updates are enabled, the current market, the latest recorded
       Bing image date, the current wallpaper path, and the info file path.
+
+  bing-wallpaper about
+      Show project, repository, license, and platform information.
 
   bing-wallpaper info
       Print the current Bing image information note.
@@ -442,6 +446,14 @@ case "${1:-run}" in
 
     echo "LaunchAgent is not currently loaded. Running updater directly instead."
     exec "$0"
+    ;;
+
+  about)
+    echo "bing-wallpaper"
+    echo "Repository: $PROJECT_REPO"
+    echo "License: MIT"
+    echo "Platform: macOS"
+    exit 0
     ;;
 
   info)
