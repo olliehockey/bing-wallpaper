@@ -55,10 +55,12 @@ $PowerShellExe = (Get-Command powershell.exe).Source
 $Action = New-ScheduledTaskAction -Execute $PowerShellExe -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$InstalledScript`""
 
 $LogonTrigger = New-ScheduledTaskTrigger -AtLogOn
-$RepeatingTrigger = New-ScheduledTaskTrigger -Daily -At ([datetime]::Today)
-$RepeatingTrigger.Repetition.Interval = "PT10M"
-$RepeatingTrigger.Repetition.Duration = "P1D"
 
+$RepeatingTrigger = New-ScheduledTaskTrigger `
+    -Once `
+    -At (Get-Date).AddMinutes(1) `
+    -RepetitionInterval (New-TimeSpan -Minutes 10) `
+    -RepetitionDuration (New-TimeSpan -Days 3650)
 $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 
 Register-ScheduledTask `
