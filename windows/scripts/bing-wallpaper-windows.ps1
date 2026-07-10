@@ -332,11 +332,21 @@ function Show-Usage {
     Write-Host "  bing-wallpaper market reset"
     Write-Host "      Reset to the default market."
     Write-Host ""
+    Write-Host "  bing-wallpaper interval"
+    Write-Host "      Show the current automatic check interval."
+    Write-Host ""
+    Write-Host "  bing-wallpaper interval SECONDS"
+    Write-Host "      Change how often the Scheduled Task checks the wallpaper. Minimum: 60 seconds."
+    Write-Host ""
+    Write-Host "  bing-wallpaper interval reset"
+    Write-Host "      Reset the automatic check interval to 600 seconds."
+    Write-Host ""
     Write-Host "  bing-wallpaper disable"
     Write-Host "      Pause automatic wallpaper updates without uninstalling."
     Write-Host ""
     Write-Host "  bing-wallpaper enable"
-    Write-Host "      Re-enable updates and request an immediate updater run."}
+    Write-Host "      Re-enable updates and request an immediate updater run."
+}
 
 
 
