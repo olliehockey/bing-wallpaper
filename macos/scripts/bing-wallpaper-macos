@@ -26,6 +26,10 @@ JSON_FILE="$WALLPAPER_DIR/latest.json"
 SUCCESS_FILE="$WALLPAPER_DIR/.last-success-date"
 DISABLED_FILE="$WALLPAPER_DIR/.disabled"
 MARKET_FILE="$WALLPAPER_DIR/.market"
+INTERVAL_FILE="$WALLPAPER_DIR/.interval"
+DEFAULT_INTERVAL_SECONDS="600"
+MIN_INTERVAL_SECONDS="60"
+LAUNCH_AGENT_PATH="$HOME/Library/LaunchAgents/com.bing-wallpaper-macos.agent.plist"
 LAUNCHD_LABEL="com.bing-wallpaper-macos.agent"
 PROJECT_REPO="https://github.com/olliehockey/bing-wallpaper"
 
@@ -90,6 +94,41 @@ if ! is_valid_market "$MARKET"; then
   echo "Falling back to en-GB."
   MARKET="en-GB"
 fi
+
+get_interval_seconds() {
+  local interval="$DEFAULT_INTERVAL_SECONDS"
+
+  if [[ -f "$INTERVAL_FILE" ]]; then
+    interval="$(tr -d '[:space:]' < "$INTERVAL_FILE")"
+  fi
+
+  case "$interval" in
+    ''|*[!0-9]*)
+      interval="$DEFAULT_INTERVAL_SECONDS"
+      ;;
+  esac
+
+  if [[ "$interval" -lt "$MIN_INTERVAL_SECONDS" ]]; then
+    interval="$MIN_INTERVAL_SECONDS"
+  fi
+
+  echo "$interval"
+}
+
+reload_launch_agent_interval() {
+  local interval
+  interval="$(get_interval_seconds)"
+
+  if [[ ! -f "$LAUNCH_AGENT_PATH" ]]; then
+    echo "LaunchAgent not found at: $LAUNCH_AGENT_PATH"
+    echo "The interval has been saved and will be used next time you install."
+    return 0
+  fi
+
+  plutil -replace StartInterval -integer "$interval" "$LAUNCH_AGENT_PATH"
+  launchctl bootout "gui/$(id -u)/$LAUNCHD_LABEL" >/dev/null 2>&1 || true
+  launchctl bootstrap "gui/$(id -u)" "$LAUNCH_AGENT_PATH"
+}
 
 get_desktoppr_bin() {
   if [[ -x /usr/local/bin/desktoppr ]]; then
@@ -324,6 +363,21 @@ It reports:
 USAGE
 }
 
+print_interval_usage() {
+  cat <<USAGE
+Usage:
+  bing-wallpaper interval
+  bing-wallpaper interval SECONDS
+  bing-wallpaper interval reset
+
+Show or change how often the macOS LaunchAgent checks the wallpaper.
+
+Default: 600 seconds
+Minimum: 60 seconds
+Recommended: 120-600 seconds
+USAGE
+}
+
 print_enable_usage() {
   cat <<USAGE
 Usage:
@@ -446,6 +500,51 @@ case "${1:-run}" in
 
     echo "LaunchAgent is not currently loaded. Running updater directly instead."
     exec "$0"
+    ;;
+
+  interval)
+    if [[ "${2:-}" == "-h" || "${2:-}" == "-help" || "${2:-}" == "--help" || "${2:-}" == "help" ]]; then
+      print_interval_usage
+      exit 0
+    fi
+
+    if [[ $# -lt 2 ]]; then
+      echo "Current interval: $(get_interval_seconds) seconds"
+      echo
+      echo "Change interval with:"
+      echo "  bing-wallpaper interval 120"
+      echo
+      echo "Reset to default with:"
+      echo "  bing-wallpaper interval reset"
+      exit 0
+    fi
+
+    if [[ "${2:-}" == "reset" ]]; then
+      rm -f "$INTERVAL_FILE"
+      echo "Interval reset to default: $DEFAULT_INTERVAL_SECONDS seconds"
+      reload_launch_agent_interval
+      exit 0
+    fi
+
+    case "${2:-}" in
+      ''|*[!0-9]*)
+        echo "Invalid interval: ${2:-}"
+        echo
+        print_interval_usage
+        exit 2
+        ;;
+    esac
+
+    if [[ "$2" -lt "$MIN_INTERVAL_SECONDS" ]]; then
+      echo "Invalid interval: $2"
+      echo "Minimum interval is $MIN_INTERVAL_SECONDS seconds."
+      exit 2
+    fi
+
+    echo "$2" > "$INTERVAL_FILE"
+    echo "Interval set to: $2 seconds"
+    reload_launch_agent_interval
+    exit 0
     ;;
 
   about)

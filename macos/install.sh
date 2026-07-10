@@ -41,6 +41,19 @@ sed -e "s|__INSTALL_PATH__|$INSTALL_PATH|" \
 	"$SCRIPT_DIR/LaunchAgents/$PLIST_LABEL.plist.template" > "$PLIST_PATH"
 
 /usr/bin/plutil -lint "$PLIST_PATH" >/dev/null
+INTERVAL_FILE="$HOME/Pictures/Bing Wallpaper/.interval"
+if [[ -f "$INTERVAL_FILE" ]]; then
+  SAVED_INTERVAL="$(tr -d '[:space:]' < "$INTERVAL_FILE")"
+  case "$SAVED_INTERVAL" in
+    ''|*[!0-9]*)
+      SAVED_INTERVAL="600"
+      ;;
+  esac
+  if [[ "$SAVED_INTERVAL" -lt 60 ]]; then
+    SAVED_INTERVAL="60"
+  fi
+  plutil -replace StartInterval -integer "$SAVED_INTERVAL" "$PLIST_PATH"
+fi
 
 echo "==> Loading LaunchAgent"
 # Unload first in case this is a re-install.

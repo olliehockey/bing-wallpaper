@@ -184,3 +184,13 @@ Invalid markets are rejected. Use:
     bing-wallpaper market list
 
 to see supported values.
+
+### Change the automatic check interval
+
+Run:
+
+    bing-wallpaper interval
+    bing-wallpaper interval 120
+    bing-wallpaper interval reset
+
+The default interval is 600 seconds. The minimum supported interval is 60 seconds. A shorter interval can help if macOS occasionally restores an old wallpaper after display, Space, or AirPlay changes.
