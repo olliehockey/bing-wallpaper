@@ -1,6 +1,9 @@
 $ErrorActionPreference = "Stop"
 
 $TaskName = "Bing Wallpaper"
+$IntervalFile = Join-Path $env:USERPROFILE "Pictures\Bing Wallpaper\.interval"
+$DefaultIntervalSeconds = 600
+$MinimumIntervalSeconds = 60
 $InstallDir = Join-Path $env:LOCALAPPDATA "Programs\bing-wallpaper"
 $RepoDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SourceScript = Join-Path $RepoDir "scripts\bing-wallpaper-windows.ps1"
@@ -49,6 +52,27 @@ else {
     Write-Host "==> PATH already contains $InstallDir"
 }
 
+
+function Get-InstallIntervalSeconds {
+    $Interval = $DefaultIntervalSeconds
+
+    if (Test-Path -LiteralPath $IntervalFile) {
+        $RawInterval = (Get-Content -LiteralPath $IntervalFile -Raw).Trim()
+
+        if ($RawInterval -match '^\d+$') {
+            $Interval = [int]$RawInterval
+        }
+    }
+
+    if ($Interval -lt $MinimumIntervalSeconds) {
+        $Interval = $MinimumIntervalSeconds
+    }
+
+    return $Interval
+}
+
+$IntervalSeconds = Get-InstallIntervalSeconds
+
 Write-Host "==> Creating scheduled task"
 
 $PowerShellExe = (Get-Command powershell.exe).Source
@@ -59,7 +83,7 @@ $LogonTrigger = New-ScheduledTaskTrigger -AtLogOn
 $RepeatingTrigger = New-ScheduledTaskTrigger `
     -Once `
     -At (Get-Date).AddMinutes(1) `
-    -RepetitionInterval (New-TimeSpan -Minutes 10) `
+    -RepetitionInterval (New-TimeSpan -Seconds $IntervalSeconds) `
     -RepetitionDuration (New-TimeSpan -Days 3650)
 
 $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
@@ -80,6 +104,7 @@ Write-Host "==> Done."
 Write-Host "    Script installed at: $InstalledScript"
 Write-Host "    Command installed at: $InstalledCommand"
 Write-Host "    Scheduled task: $TaskName"
+Write-Host "    Check interval: $IntervalSeconds seconds"
 Write-Host ""
 Write-Host "    You may need to open a new terminal before the bing-wallpaper command is available."
 Write-Host ""

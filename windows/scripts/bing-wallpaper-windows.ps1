@@ -14,6 +14,9 @@ $JsonFile = Join-Path $WallpaperDir "latest.json"
 $SuccessFile = Join-Path $WallpaperDir ".last-success-date"
 $DisabledFile = Join-Path $WallpaperDir ".disabled"
 $MarketFile = Join-Path $WallpaperDir ".market"
+$IntervalFile = Join-Path $WallpaperDir ".interval"
+$DefaultIntervalSeconds = 600
+$MinimumIntervalSeconds = 60
 $ProjectRepo = "https://github.com/olliehockey/bing-wallpaper"
 $TaskName = "Bing Wallpaper"
 
@@ -55,6 +58,62 @@ if ($ValidMarkets -notcontains $Market) {
     Write-Host "Saved/default market is not supported: $Market"
     Write-Host "Falling back to en-GB."
     $Market = "en-GB"
+}
+
+function Get-IntervalSeconds {
+    $Interval = $DefaultIntervalSeconds
+
+    if (Test-Path -LiteralPath $IntervalFile) {
+        $RawInterval = (Get-Content -LiteralPath $IntervalFile -Raw).Trim()
+
+        if ($RawInterval -match '^\d+$') {
+            $Interval = [int]$RawInterval
+        }
+    }
+
+    if ($Interval -lt $MinimumIntervalSeconds) {
+        $Interval = $MinimumIntervalSeconds
+    }
+
+    return $Interval
+}
+
+function Update-ScheduledTaskInterval {
+    $Interval = Get-IntervalSeconds
+    $Task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+
+    if (-not $Task) {
+        Write-Host "Scheduled Task is not currently registered."
+        Write-Host "The interval has been saved and will be used next time you install."
+        return
+    }
+
+    $PowerShellExe = (Get-Command powershell.exe).Source
+    $ScriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
+
+    $Action = New-ScheduledTaskAction `
+        -Execute $PowerShellExe `
+        -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$ScriptPath`""
+
+    $LogonTrigger = New-ScheduledTaskTrigger -AtLogOn
+
+    $RepeatingTrigger = New-ScheduledTaskTrigger `
+        -Once `
+        -At (Get-Date).AddMinutes(1) `
+        -RepetitionInterval (New-TimeSpan -Seconds $Interval) `
+        -RepetitionDuration (New-TimeSpan -Days 3650)
+
+    $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+
+    Register-ScheduledTask `
+        -TaskName $TaskName `
+        -Action $Action `
+        -Trigger @($LogonTrigger, $RepeatingTrigger) `
+        -Settings $Settings `
+        -Description "Downloads Bing's daily wallpaper and keeps it as the Windows desktop wallpaper while enabled." `
+        -Force | Out-Null
+
+    Write-Host "Scheduled Task interval updated to $Interval seconds."
 }
 
 function Get-CurrentWallpaper {
@@ -362,6 +421,19 @@ function Show-StatusUsage {
     Write-Host "  image info file path"
 }
 
+function Show-IntervalUsage {
+    Write-Host "Usage:"
+    Write-Host "  bing-wallpaper interval"
+    Write-Host "  bing-wallpaper interval SECONDS"
+    Write-Host "  bing-wallpaper interval reset"
+    Write-Host ""
+    Write-Host "Show or change how often the Windows Scheduled Task checks the wallpaper."
+    Write-Host ""
+    Write-Host "Default: 600 seconds"
+    Write-Host "Minimum: 60 seconds"
+    Write-Host "Recommended: 120-600 seconds"
+}
+
 function Show-EnableUsage {
     Write-Host "Usage:"
     Write-Host "  bing-wallpaper enable"
@@ -493,6 +565,51 @@ switch ($Command) {
         $ScriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
         & $ScriptPath
         exit $LASTEXITCODE
+    }
+
+    "interval" {
+        if (@("-h", "-help", "--help", "help") -contains $Argument) {
+            Show-IntervalUsage
+            exit 0
+        }
+
+        if ([string]::IsNullOrWhiteSpace($Argument)) {
+            Write-Host "Current interval: $(Get-IntervalSeconds) seconds"
+            Write-Host ""
+            Write-Host "Change interval with:"
+            Write-Host "  bing-wallpaper interval 120"
+            Write-Host ""
+            Write-Host "Reset to default with:"
+            Write-Host "  bing-wallpaper interval reset"
+            exit 0
+        }
+
+        if ($Argument -eq "reset") {
+            Remove-Item -LiteralPath $IntervalFile -Force -ErrorAction SilentlyContinue
+            Write-Host "Interval reset to default: $DefaultIntervalSeconds seconds"
+            Update-ScheduledTaskInterval
+            exit 0
+        }
+
+        if ($Argument -notmatch '^\d+$') {
+            Write-Host "Invalid interval: $Argument"
+            Write-Host ""
+            Show-IntervalUsage
+            exit 2
+        }
+
+        $RequestedInterval = [int]$Argument
+
+        if ($RequestedInterval -lt $MinimumIntervalSeconds) {
+            Write-Host "Invalid interval: $RequestedInterval"
+            Write-Host "Minimum interval is $MinimumIntervalSeconds seconds."
+            exit 2
+        }
+
+        $RequestedInterval | Set-Content -LiteralPath $IntervalFile -Encoding UTF8
+        Write-Host "Interval set to: $RequestedInterval seconds"
+        Update-ScheduledTaskInterval
+        exit 0
     }
 
     "about" {
