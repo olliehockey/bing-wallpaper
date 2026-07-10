@@ -281,6 +281,15 @@ Commands:
   bing-wallpaper market reset
       Reset to the default market.
 
+  bing-wallpaper interval
+      Show the current automatic check interval.
+
+  bing-wallpaper interval SECONDS
+      Change how often the LaunchAgent checks the wallpaper. Minimum: 60 seconds.
+
+  bing-wallpaper interval reset
+      Reset the automatic check interval to 600 seconds.
+
   bing-wallpaper disable
       Pause automatic wallpaper updates without uninstalling.
 
