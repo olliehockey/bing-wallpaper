@@ -158,14 +158,8 @@ set_wallpaper() {
   desktoppr_bin="$(get_desktoppr_bin || true)"
 
   if [[ -n "$desktoppr_bin" ]]; then
-    "$desktoppr_bin" "$image_file"
+    "$desktoppr_bin" "$image_file" || true
     sleep 1
-
-    if "$desktoppr_bin" | grep -Fxq "$image_file"; then
-      return 0
-    fi
-
-    echo "desktoppr did not verify the wallpaper path. Falling back to AppleScript."
   fi
 
   BING_WALLPAPER_PATH="$image_file" /usr/bin/osascript <<'APPLESCRIPT'
@@ -179,6 +173,28 @@ end tell
 APPLESCRIPT
 
   sleep 1
+
+  local current_wallpapers
+  current_wallpapers="$(/usr/bin/osascript -e 'tell application "System Events" to get picture of every desktop' 2>/dev/null || true)"
+
+  if [[ -n "$current_wallpapers" ]]; then
+    IFS=',' read -rA wallpaper_paths <<< "$current_wallpapers"
+
+    local wallpaper_path
+    for wallpaper_path in "${wallpaper_paths[@]}"; do
+      wallpaper_path="${wallpaper_path#"${wallpaper_path%%[![:space:]]*}"}"
+      wallpaper_path="${wallpaper_path%"${wallpaper_path##*[![:space:]]}"}"
+
+      if [[ "$wallpaper_path" != "$image_file" ]]; then
+        echo "Wallpaper setter did not verify every desktop."
+        echo "Expected: $image_file"
+        echo "Current:  $current_wallpapers"
+        return 1
+      fi
+    done
+
+    return 0
+  fi
 
   local current_wallpaper
   current_wallpaper="$(get_current_wallpaper || true)"
